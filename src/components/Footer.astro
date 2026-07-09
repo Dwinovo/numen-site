@@ -1,0 +1,132 @@
+---
+// 页脚 —— 自带深色底的实体块（避免整页环境色突变），
+// 内容三层：许可行 → 免责声明 → 全出血 NUMEN 巨型字标压轴。
+// 首页不做仓库介绍/链接——生态展示在 /addons。
+---
+
+<footer class="footer">
+	<div class="footer-inner">
+		<div class="footer-meta">
+			<span class="meta-rule" aria-hidden="true"></span>
+			<p class="footer-license">引擎 LGPL-3.0 · 公开 API MIT</p>
+			<p class="footer-disclaimer">
+				NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.
+			</p>
+		</div>
+	</div>
+
+	<p class="footer-mark" aria-label="NUMEN">
+		{'NUMEN'.split('').map((ch) => (
+			<span class="mark-letter" aria-hidden="true"><span class="mark-glyph">{ch}</span></span>
+		))}
+	</p>
+</footer>
+
+<style>
+	.footer {
+		--x-hairline: color-mix(in srgb, currentColor 14%, transparent);
+		--x-muted: color-mix(in srgb, currentColor 58%, transparent);
+		--x-faint: color-mix(in srgb, currentColor 36%, transparent);
+		--x-mono: 'Cascadia Mono', 'SF Mono', Consolas, ui-monospace, monospace;
+		--x-cjk:
+			'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC',
+			'Microsoft YaHei', sans-serif;
+
+		background-color: #0e0c0a;
+		color: #fef9ed;
+		padding-top: clamp(7rem, 18vh, 13rem);
+		overflow: hidden;
+		font-family: var(--x-cjk);
+	}
+
+	.footer-inner {
+		max-width: 1400px;
+		margin-inline: auto;
+		padding-inline: 6vw;
+	}
+
+	.meta-rule {
+		display: block;
+		height: 1px;
+		width: 100%;
+		background-color: var(--x-hairline);
+	}
+
+	.footer-license {
+		margin: 0;
+		padding-top: 1.1rem;
+		font-size: 0.85rem;
+		color: var(--x-muted);
+	}
+
+	.footer-disclaimer {
+		margin: 0.7rem 0 0;
+		font-family: var(--x-mono);
+		font-size: 0.66rem;
+		letter-spacing: 0.08em;
+		color: var(--x-faint);
+	}
+
+	/* ---------- 压轴字标：全出血，贴住页面底边 ---------- */
+	.footer-mark {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-end;
+		width: 100%;
+		padding-inline: 1.5vw;
+		margin: clamp(3.5rem, 9vh, 6.5rem) 0 0;
+		font-weight: 900;
+		font-size: clamp(3.4rem, 17.5vw, 21rem);
+		line-height: 0.82;
+		user-select: none;
+	}
+
+	.mark-letter {
+		display: block;
+		overflow: hidden;
+	}
+
+	.mark-glyph {
+		display: block;
+		transform: translateZ(0);
+	}
+</style>
+
+<script>
+	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+	if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		gsap.registerPlugin(ScrollTrigger);
+
+		// 许可行：划线 + 浮起
+		gsap
+			.timeline({
+				scrollTrigger: { trigger: '.footer-meta', start: 'top 88%' },
+			})
+			.from('.footer-meta .meta-rule', {
+				scaleX: 0,
+				transformOrigin: 'left center',
+				duration: 0.7,
+				ease: 'power2.inOut',
+			})
+			.from(
+				'.footer-license, .footer-disclaimer',
+				{ y: 16, autoAlpha: 0, duration: 0.6, stagger: 0.1, ease: 'power2.out' },
+				0.2
+			);
+
+		// 压轴字标：与滚动条直接挂钩，五个字母从底边逐个升起
+		gsap.from('.footer-mark .mark-glyph', {
+			yPercent: 110,
+			ease: 'none',
+			stagger: 0.12,
+			scrollTrigger: {
+				trigger: '.footer-mark',
+				start: 'top bottom',
+				end: 'bottom bottom',
+				scrub: 0.4,
+			},
+		});
+	}
+</script>

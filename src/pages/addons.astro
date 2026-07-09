@@ -1,0 +1,752 @@
+---
+// Addons —— 生态目录页
+// 定位：大厂 marketplace 式的功能页。首页负责表演，这里负责让人高效地找到东西。
+// 结构：克制页头 → 共享边框 4 列卡片网格（每页 12 = 4×3）→ 分页。
+// 卡片做渐进披露：静息态只印作品名，hover / focus 时描述与作者错拍显影（触屏常驻显示）。
+// 点击卡片弹出详情层：完整描述 + 相关链接（GitHub / CurseForge / Modrinth / 官网……任意多条）。
+// 分页、详情层均为 client-side 增强：无 JS 时卡片直接是首链接的 <a>，全量可见可点。
+import Subpage from '../layouts/Subpage.astro';
+
+type EntryLink = { label: string; href: string };
+type Entry = {
+	type: '模组' | '引擎' | 'MCP' | 'Skill' | '工具';
+	name: string;
+	desc: string;
+	author: string;
+	// 第一条是主链接（卡片的无 JS 回退目标）；未来条目可自带 CurseForge / Modrinth 等
+	links: EntryLink[];
+};
+
+// 条目按提交顺序追加即可——筛选、计数、分页、详情全部自动成立。
+const entries: Entry[] = [
+	{
+		type: '模组',
+		name: 'minecraft-numen',
+		desc: '完整的 AI 同伴模组。自然语言下达任务，自动分解、规划、执行——从下矿采铁到通关原版。',
+		author: 'Dwinovo · 官方',
+		links: [{ label: 'GitHub', href: 'https://github.com/Dwinovo/minecraft-numen' }],
+	},
+	{
+		type: '引擎',
+		name: 'numen-api',
+		desc: '纯调度器设计的同伴引擎：智能体循环、感知、行动、记忆。官方有的每一分能力，第三方同样拿得到。',
+		author: 'Dwinovo · 官方',
+		links: [{ label: 'GitHub', href: 'https://github.com/Dwinovo/numen-api' }],
+	},
+	{
+		type: 'MCP',
+		name: 'numen-qq-mcp',
+		desc: '把游戏里的同伴绑上 QQ。人不在电脑前，私聊一句“把家里的小麦收了”，回来时箱子已经满了。',
+		author: 'Dwinovo · 官方',
+		links: [{ label: 'GitHub', href: 'https://github.com/Dwinovo/numen-qq-mcp' }],
+	},
+	{
+		type: '工具',
+		name: 'numen-maven',
+		desc: 'numen-api 构建产物的 Maven 仓库，api / full 双工件分发。写你自己的工具包，从一行依赖开始。',
+		author: 'Dwinovo · 官方',
+		links: [{ label: 'GitHub', href: 'https://github.com/Dwinovo/numen-maven' }],
+	},
+];
+
+---
+
+<Subpage title="Addons — Numen" description="Numen 生态的模组、Skill 与 MCP 目录。" current="addons">
+	<div class="catalog" data-catalog>
+		<header class="catalog-head">
+			<h1 class="catalog-title">Addons</h1>
+			<p class="catalog-sub">生态里的模组、Skill 与 MCP。本站只做索引——链接指向 GitHub 或 CurseForge，作品永远属于作者。</p>
+		</header>
+		<section class="catalog-body" aria-label="生态目录">
+			<div class="card-grid is-settling" data-grid>
+				{
+					entries.map((e, i) => (
+						<a
+							class="card"
+							data-entry={JSON.stringify(e)}
+							href={e.links[0].href}
+							target="_blank"
+							rel="noopener"
+							style={`--i: ${i}`}
+						>
+							<span class="card-name">{e.name}</span>
+							<span class="card-desc">{e.desc}</span>
+							<span class="card-foot">
+								<span class="card-author">{e.author}</span>
+								<span class="card-cue" aria-hidden="true">
+									<span class="cue-a">↗</span>
+									<span class="cue-b">↗</span>
+								</span>
+							</span>
+						</a>
+					))
+				}
+			</div>
+
+			<nav class="pager" data-pager hidden aria-label="分页">
+				<button type="button" class="pager-btn" data-prev>← 上一页</button>
+				<div class="pager-pages" data-pages></div>
+				<button type="button" class="pager-btn" data-next>下一页 →</button>
+			</nav>
+		</section>
+
+		<!-- 详情层：点击卡片弹出，展示完整描述与全部相关链接 -->
+		<dialog class="detail" data-detail>
+			<div class="detail-top">
+				<span class="detail-type" data-d-type></span>
+				<button type="button" class="detail-close" data-d-close aria-label="关闭">×</button>
+			</div>
+			<h2 class="detail-name" data-d-name></h2>
+			<p class="detail-desc" data-d-desc></p>
+			<p class="detail-author" data-d-author></p>
+			<div class="detail-links" data-d-links></div>
+		</dialog>
+	</div>
+</Subpage>
+
+<script>
+	const PAGE_SIZE = 12; // 4 列 × 3 行
+
+	const catalog = document.querySelector<HTMLElement>('[data-catalog]');
+
+	if (catalog) {
+		const grid = catalog.querySelector<HTMLElement>('[data-grid]')!;
+		const cards = [...grid.querySelectorAll<HTMLElement>('.card')];
+		const pager = catalog.querySelector<HTMLElement>('[data-pager]')!;
+		const pagesWrap = pager.querySelector<HTMLElement>('[data-pages]')!;
+		const prevBtn = pager.querySelector<HTMLButtonElement>('[data-prev]')!;
+		const nextBtn = pager.querySelector<HTMLButtonElement>('[data-next]')!;
+		const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+		const pad = (n: number) => String(n).padStart(2, '0');
+
+		let page = 1;
+
+		// 页码序列：页数少全列出，页数多收敛为 1 … n-1 n n+1 … total
+		function pageList(total: number, current: number): (number | '…')[] {
+			if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+			const keep = new Set([1, total, current - 1, current, current + 1]);
+			const list: (number | '…')[] = [];
+			for (let i = 1; i <= total; i++) {
+				if (keep.has(i)) list.push(i);
+				else if (list[list.length - 1] !== '…') list.push('…');
+			}
+			return list;
+		}
+
+		function render(animate = true) {
+			const totalPages = Math.max(1, Math.ceil(cards.length / PAGE_SIZE));
+			if (page > totalPages) page = totalPages;
+
+			const start = (page - 1) * PAGE_SIZE;
+			const shown = cards.slice(start, start + PAGE_SIZE);
+			cards.forEach((c) => c.classList.toggle('is-off', !shown.includes(c)));
+			shown.forEach((c, i) => c.style.setProperty('--i', String(i)));
+
+			prevBtn.disabled = page <= 1;
+			nextBtn.disabled = page >= totalPages;
+			pagesWrap.replaceChildren(
+				...pageList(totalPages, page).map((p) => {
+					if (p === '…') {
+						const gap = document.createElement('span');
+						gap.className = 'pager-gap';
+						gap.textContent = '…';
+						return gap;
+					}
+					const btn = document.createElement('button');
+					btn.type = 'button';
+					btn.className = 'pager-num';
+					btn.textContent = pad(p);
+					if (p === page) btn.setAttribute('aria-current', 'page');
+					else
+						btn.addEventListener('click', () => {
+							page = p;
+							render();
+						});
+					return btn;
+				}),
+			);
+
+			if (animate && !reduced.matches) {
+				grid.classList.remove('is-settling');
+				void grid.offsetWidth; // 强制回流，重启一拍柔和的进场
+				grid.classList.add('is-settling');
+			}
+		}
+
+		prevBtn.addEventListener('click', () => {
+			if (page > 1) {
+				page--;
+				render();
+			}
+		});
+		nextBtn.addEventListener('click', () => {
+			page++;
+			render();
+		});
+
+		// —— 详情层：点击卡片弹出完整信息与全部相关链接 ——
+		const detail = catalog.querySelector<HTMLDialogElement>('[data-detail]');
+		if (detail) {
+			const dType = detail.querySelector<HTMLElement>('[data-d-type]')!;
+			const dName = detail.querySelector<HTMLElement>('[data-d-name]')!;
+			const dDesc = detail.querySelector<HTMLElement>('[data-d-desc]')!;
+			const dAuthor = detail.querySelector<HTMLElement>('[data-d-author]')!;
+			const dLinks = detail.querySelector<HTMLElement>('[data-d-links]')!;
+
+			const hostOf = (href: string) => {
+				try {
+					return new URL(href).hostname.replace(/^www\./, '');
+				} catch {
+					return href;
+				}
+			};
+
+			const open = (card: HTMLElement) => {
+				const e = JSON.parse(card.dataset.entry ?? '{}');
+				dType.textContent = e.type ?? '';
+				dName.textContent = e.name ?? '';
+				dDesc.textContent = e.desc ?? '';
+				dAuthor.textContent = e.author ?? '';
+				dLinks.replaceChildren(
+					...(e.links ?? []).map((l: { label: string; href: string }) => {
+						const a = document.createElement('a');
+						a.className = 'detail-link';
+						a.href = l.href;
+						a.target = '_blank';
+						a.rel = 'noopener';
+						a.innerHTML = `<span class="dl-label">${l.label}</span><span class="dl-host">${hostOf(l.href)}</span><span class="dl-cue" aria-hidden="true">↗</span>`;
+						return a;
+					}),
+				);
+				detail.showModal();
+			};
+
+			cards.forEach((card) => {
+				card.addEventListener('click', (ev) => {
+					ev.preventDefault();
+					open(card);
+				});
+			});
+
+			detail.querySelector('[data-d-close]')?.addEventListener('click', () => detail.close());
+			// 点击面板外（backdrop）关闭
+			detail.addEventListener('click', (ev) => {
+				if (ev.target === detail) detail.close();
+			});
+		}
+
+		// JS 就绪后才亮出分页——无 JS 时它不存在，卡片全量可见。
+		pager.hidden = false;
+		render(false);
+	}
+</script>
+
+<style>
+	/* ============ 全宽容器：与固定顶栏的 5vw 内边距对齐 ============ */
+	.catalog {
+		width: min(1720px, 90vw);
+		margin-inline: auto;
+	}
+
+	/* ============ 页头：克制的一行，不是 hero ============ */
+	.catalog-head {
+		padding-top: clamp(7.5rem, 14vh, 9.5rem);
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: clamp(1.5rem, 4vw, 4rem);
+		flex-wrap: wrap;
+	}
+
+	.catalog-title {
+		font-family: var(--font-mono);
+		font-weight: 700;
+		font-size: clamp(1.2rem, 1.7vw, 1.55rem);
+		letter-spacing: 0.22em;
+		text-transform: uppercase;
+		margin: 0;
+	}
+
+	.catalog-sub {
+		margin: 0;
+		font-size: clamp(0.88rem, 1.1vw, 0.98rem);
+		line-height: 1.9;
+		color: var(--faint);
+	}
+
+	.catalog-body {
+		padding-top: clamp(1.8rem, 4vh, 2.8rem);
+		padding-bottom: 0;
+	}
+
+	/* ============ 卡片网格：共享边框——网格供上/左两条线，格子各带右/下两条 ============
+	   相邻格子共用一条发丝线，box-in-box 消失；筛选后行尾不齐时，边缘自然收成阶梯。 */
+	.card-grid {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 0;
+		margin-top: clamp(2.5rem, 5vh, 3.5rem);
+		border-top: 1px solid var(--hairline);
+		border-left: 1px solid var(--hairline);
+	}
+
+	/* 筛到 0 条时网格空了，别留一条孤线 */
+	.card-grid:not(:has(.card:not(.is-off))) {
+		border: none;
+	}
+
+	@media (min-width: 680px) {
+		.card-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+
+	@media (min-width: 1040px) {
+		.card-grid {
+			grid-template-columns: repeat(3, 1fr);
+		}
+	}
+
+	@media (min-width: 1360px) {
+		.card-grid {
+			grid-template-columns: repeat(4, 1fr);
+		}
+	}
+
+	/* 格子：无自身面板——透明底、只带右/下两条共享线。
+	   渐进披露：静息态只印作品名，像一张画廊标签；描述与作者常驻文档流但不可见——
+	   hover 前后版面纹丝不动，只是"显影"。 */
+	.card {
+		position: relative;
+		isolation: isolate; /* 让 ::after 的 z-index:-1 停在格子内，不掉到页面底色后面 */
+		display: flex;
+		flex-direction: column;
+		padding: clamp(2.2rem, 2.6vw, 3rem);
+		border-right: 1px solid var(--hairline);
+		border-bottom: 1px solid var(--hairline);
+		background: none;
+		color: inherit;
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	a.card:focus-visible {
+		outline: 1px solid color-mix(in srgb, currentColor 45%, transparent);
+		outline-offset: -6px;
+	}
+
+	/* 第一拍（0s 起，0.55s）：一层 4% 洗色自底部升起，像展签背后亮起的灯 */
+	.card::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		background-color: color-mix(in srgb, currentColor 4%, transparent);
+		transform: scaleY(0);
+		transform-origin: bottom;
+		transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	a.card:hover::after,
+	a.card:focus-visible::after {
+		transform: scaleY(1);
+	}
+
+	@media (min-width: 680px) {
+		.card {
+			min-height: clamp(300px, 32vh, 380px);
+		}
+	}
+
+	.card.is-off {
+		display: none;
+	}
+
+	/* 静息态在场的唯一主角：mono 大标题，字号给足自信 */
+	.card-name {
+		font-family: var(--font-mono);
+		font-weight: 700;
+		font-size: clamp(1.55rem, 1.8vw, 2.1rem);
+		line-height: 1.22;
+		overflow-wrap: anywhere;
+	}
+
+	/* 描述常驻——它是实质信息；作者行留给 hover 显影（兴趣的奖赏）。
+	   基准态 transition-delay 为 0——离开时同步即刻退场，不拖泥带水。 */
+	.card-author {
+		opacity: 0;
+		transform: translateY(0.55rem);
+		transition:
+			opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+			transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+		transition-delay: 0s;
+	}
+
+	/* 描述：常驻可见，钉在底部区 */
+	.card-desc {
+		margin-top: auto;
+		padding-top: clamp(2.4rem, 5vh, 3.2rem);
+		font-size: clamp(0.92rem, 1vw, 1rem);
+		line-height: 1.9;
+		color: var(--muted);
+	}
+
+	/* hover 显影：作者行（+0.08s 一拍即够） */
+	a.card:hover .card-author,
+	a.card:focus-visible .card-author {
+		opacity: 1;
+		transform: translateY(0);
+		transition-delay: 0.08s;
+	}
+
+	/* 底行：作者靠左显影，右端箭头是静息态留下的唯一暗示 */
+	.card-foot {
+		display: flex;
+		align-items: baseline;
+		gap: 1.2em;
+		margin-top: clamp(1.4rem, 3vh, 2rem);
+	}
+
+	.card-author {
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.12em;
+		color: var(--faint);
+	}
+
+	/* 箭头：静息态压到极弱，hover 点亮并滑换——旧箭头出右上，新箭头自左下补位 */
+	.card-cue {
+		position: relative;
+		width: 1.3em;
+		height: 1.3em;
+		margin-left: auto;
+		align-self: center;
+		overflow: hidden;
+		font-size: 1.05rem;
+		color: color-mix(in srgb, currentColor 26%, transparent);
+		transition: color 0.4s ease;
+	}
+
+	.card-cue span {
+		position: absolute;
+		inset: 0;
+		display: grid;
+		place-items: center;
+		transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	.cue-b {
+		transform: translate(-130%, 130%);
+	}
+
+	a.card:hover .card-cue,
+	a.card:focus-visible .card-cue {
+		color: inherit;
+	}
+
+	a.card:hover .cue-a,
+	a.card:focus-visible .cue-a {
+		transform: translate(130%, -130%);
+	}
+
+	a.card:hover .cue-b,
+	a.card:focus-visible .cue-b {
+		transform: translate(0, 0);
+	}
+
+	/* 无 hover 设备：渐进披露只属于有指针的设备——信息常驻，箭头回到常规灰 */
+	@media (hover: none) {
+		.card-author {
+			opacity: 1;
+			transform: none;
+		}
+
+		.card-cue {
+			color: var(--faint);
+		}
+
+		.card {
+			min-height: 0;
+		}
+	}
+
+	/* ============ 分页 ============ */
+	.pager {
+		margin-top: clamp(3rem, 6vh, 4.5rem);
+		border-top: 1px solid var(--hairline);
+		padding-top: 1.3rem;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 1rem;
+		flex-wrap: wrap;
+	}
+
+	.pager-btn {
+		padding: 0.6em 1.1em;
+		border: 1px solid var(--hairline);
+		background: none;
+		font-family: var(--font-mono);
+		font-size: 0.74rem;
+		letter-spacing: 0.16em;
+		color: var(--faint);
+		cursor: pointer;
+		transition:
+			color 0.2s ease,
+			border-color 0.2s ease;
+	}
+
+	.pager-btn:hover:not(:disabled),
+	.pager-btn:focus-visible:not(:disabled) {
+		color: inherit;
+		border-color: color-mix(in srgb, currentColor 30%, transparent);
+	}
+
+	.pager-btn:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+
+	.pager-pages {
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+	}
+
+	.pager :global(.pager-num) {
+		padding: 0.6em 0.95em;
+		border: 1px solid transparent;
+		background: none;
+		font-family: var(--font-mono);
+		font-size: 0.74rem;
+		letter-spacing: 0.1em;
+		color: var(--faint);
+		cursor: pointer;
+		transition:
+			color 0.2s ease,
+			border-color 0.2s ease;
+	}
+
+	.pager :global(.pager-num:hover),
+	.pager :global(.pager-num:focus-visible) {
+		color: inherit;
+	}
+
+	.pager :global(.pager-num[aria-current='page']) {
+		color: inherit;
+		border-color: color-mix(in srgb, currentColor 45%, transparent);
+		cursor: default;
+	}
+
+	.pager :global(.pager-gap) {
+		font-family: var(--font-mono);
+		font-size: 0.74rem;
+		color: var(--faint);
+		padding: 0 0.3em;
+	}
+
+	/* ============ 详情层：发丝线面板，暗底同源 ============ */
+	.detail {
+		/* Tailwind preflight 清掉了 dialog 的默认 margin:auto，显式补回居中 */
+		margin: auto;
+		width: min(600px, 92vw);
+		border: 1px solid color-mix(in srgb, #171310 22%, transparent);
+		background-color: #fffdf6;
+		color: #171310;
+		padding: clamp(1.8rem, 3vw, 2.8rem);
+		font-family: var(--font-cjk);
+	}
+
+	.detail::backdrop {
+		background: rgba(14, 12, 10, 0.45);
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.detail[open] {
+			animation: detail-rise 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+		}
+
+		.detail[open]::backdrop {
+			animation: detail-fade 0.3s ease;
+		}
+	}
+
+	@keyframes detail-rise {
+		from {
+			opacity: 0;
+			transform: translateY(16px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	@keyframes detail-fade {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
+	.detail-top {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: clamp(1.8rem, 3.5vh, 2.6rem);
+	}
+
+	/* 与卡片同语言：类型不入框，小号 mono + 字距 */
+	.detail-type {
+		font-family: var(--font-mono);
+		font-size: 0.68rem;
+		letter-spacing: 0.24em;
+		text-transform: uppercase;
+		color: color-mix(in srgb, currentColor 36%, transparent);
+	}
+
+	.detail-close {
+		width: 2.2rem;
+		height: 2.2rem;
+		border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+		background: none;
+		color: color-mix(in srgb, currentColor 58%, transparent);
+		font-size: 1.1rem;
+		line-height: 1;
+		cursor: pointer;
+		transition: color 0.2s ease, border-color 0.2s ease;
+	}
+
+	.detail-close:hover,
+	.detail-close:focus-visible {
+		color: inherit;
+		border-color: color-mix(in srgb, currentColor 40%, transparent);
+	}
+
+	.detail-name {
+		font-family: var(--font-mono);
+		font-weight: 700;
+		font-size: clamp(1.5rem, 2.4vw, 2rem);
+		line-height: 1.25;
+		margin: 0;
+		overflow-wrap: anywhere;
+	}
+
+	.detail-desc {
+		margin: 1.2rem 0 0;
+		font-size: clamp(0.98rem, 1.15vw, 1.08rem);
+		line-height: 2;
+		color: color-mix(in srgb, currentColor 58%, transparent);
+	}
+
+	.detail-author {
+		margin: 1.4rem 0 0;
+		font-family: var(--font-mono);
+		font-size: 0.74rem;
+		letter-spacing: 0.14em;
+		color: color-mix(in srgb, currentColor 36%, transparent);
+	}
+
+	/* 链接列表：发丝线账目行——GitHub / CurseForge / Modrinth …… */
+	.detail-links {
+		margin-top: clamp(1.8rem, 3.5vh, 2.4rem);
+		border-top: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+	}
+
+	.detail :global(.detail-link) {
+		display: flex;
+		align-items: baseline;
+		gap: 1.2rem;
+		padding: 1.05rem 0.2rem;
+		border-bottom: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+		color: inherit;
+		text-decoration: none;
+		font-family: var(--font-mono);
+		transition: background-color 0.2s ease;
+	}
+
+	.detail :global(.detail-link:hover),
+	.detail :global(.detail-link:focus-visible) {
+		background-color: color-mix(in srgb, currentColor 4%, transparent);
+	}
+
+	.detail :global(.dl-label) {
+		font-size: 0.82rem;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+	}
+
+	.detail :global(.dl-host) {
+		margin-left: auto;
+		font-size: 0.74rem;
+		letter-spacing: 0.1em;
+		color: color-mix(in srgb, currentColor 36%, transparent);
+	}
+
+	.detail :global(.dl-cue) {
+		color: color-mix(in srgb, currentColor 36%, transparent);
+		transition: transform 0.2s ease, color 0.2s ease;
+	}
+
+	.detail :global(.detail-link:hover .dl-cue) {
+		transform: translate(2px, -2px);
+		color: inherit;
+	}
+
+	/* ============ 进场与切换：一拍轻微的 stagger 淡入 ============ */
+	@media (prefers-reduced-motion: no-preference) {
+		.catalog-head > * {
+			animation: catalog-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+		}
+
+		.catalog-head > :nth-child(2) {
+			animation-delay: 0.06s;
+		}
+
+		.catalog-head > :nth-child(3) {
+			animation-delay: 0.12s;
+		}
+
+		.pager {
+			animation: catalog-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both;
+		}
+
+		.card-grid.is-settling .card:not(.is-off) {
+			animation: catalog-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+			animation-delay: calc(0.1s + var(--i, 0) * 55ms);
+		}
+	}
+
+	@keyframes catalog-rise {
+		from {
+			opacity: 0;
+			transform: translateY(14px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	/* 减动效：披露仍然发生，只是直接切换——不做任何过渡 */
+	@media (prefers-reduced-motion: reduce) {
+		.card::after,
+		.card-desc,
+		.card-author,
+		.card-cue,
+		.card-cue span,
+		.pager-btn {
+			transition: none;
+		}
+	}
+
+	/* ============ 响应式 ============ */
+	@media (max-width: 860px) {
+		.pager {
+			justify-content: center;
+		}
+	}
+</style>

@@ -1,0 +1,95 @@
+---
+// 子页面共享布局 —— 安静的工具页：米白底、墨黑字、无滚动动效。
+// 首页负责表演，子页负责把信息交代清楚。
+import '../styles/global.css';
+import Nav from '../components/Nav.astro';
+
+const { title, description, current } = Astro.props as {
+	title: string;
+	description: string;
+	current: 'home' | 'addons' | 'docs' | 'about';
+};
+---
+
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+	</head>
+	<body>
+		<Nav current={current} />
+		<main class="subpage">
+			<slot />
+			<footer class="subpage-foot">
+				<p>NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.</p>
+			</footer>
+		</main>
+	</body>
+</html>
+
+<style is:global>
+	.subpage {
+		--moss: #86c15c;
+		--hairline: color-mix(in srgb, currentColor 14%, transparent);
+		--muted: color-mix(in srgb, currentColor 58%, transparent);
+		--faint: color-mix(in srgb, currentColor 36%, transparent);
+		--font-cjk:
+			'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC',
+			'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+		--font-mono: 'Cascadia Mono', 'SF Mono', Consolas, ui-monospace, monospace;
+
+		/* 子页以米白为主题：黑色只属于首页的高潮时刻 */
+		background-color: #fef9ed;
+		color: #171310;
+		min-height: 100dvh;
+		font-family: var(--font-cjk);
+	}
+
+	.subpage .page-head {
+		max-width: 1080px;
+		margin-inline: auto;
+		padding: clamp(9rem, 20vh, 13rem) 6vw 0;
+	}
+
+	.subpage .page-eyebrow {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		letter-spacing: 0.35em;
+		text-transform: uppercase;
+		color: var(--faint);
+		margin: 0 0 clamp(2rem, 5vh, 3rem);
+	}
+
+	.subpage .page-title {
+		font-weight: 900;
+		font-size: clamp(2.2rem, 5vw, 4.4rem);
+		line-height: 1.22;
+		margin: 0;
+	}
+
+	.subpage .page-lede {
+		margin: clamp(1.6rem, 3.5vh, 2.4rem) 0 0;
+		max-width: 38em;
+		font-size: clamp(1rem, 1.4vw, 1.2rem);
+		line-height: 2;
+		color: var(--muted);
+	}
+
+	.subpage-foot {
+		padding: clamp(4rem, 9vh, 6rem) 6vw clamp(2rem, 4vh, 3rem);
+		text-align: center;
+	}
+
+	.subpage-foot p {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.66rem;
+		letter-spacing: 0.08em;
+		color: var(--faint);
+	}
+</style>

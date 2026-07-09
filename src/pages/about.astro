@@ -1,0 +1,144 @@
+---
+// 关于作者 —— 极简：一个人、一个念头、一个生态。
+// 引语译自 minecraft-numen / numen-api README 的原文，不编造个人信息。
+import Subpage from '../layouts/Subpage.astro';
+---
+
+<Subpage
+	title="关于 — Numen"
+	description="关于 Numen 的作者 Dwinovo，以及这个生态想做成的事。"
+	current="about"
+>
+	<header class="page-head">
+		<p class="page-eyebrow">About</p>
+		<h1 class="page-title">一个人，先把它做出来了。</h1>
+	</header>
+
+	<div class="about">
+		<section class="about-block">
+			<p class="about-body">
+				Numen 生态由 <a href="https://github.com/Dwinovo" target="_blank" rel="noopener">Dwinovo</a>
+				独立创造并维护——从引擎、旗舰模组到 QQ 桥接和分发仓库。
+			</p>
+			<p class="about-body">
+				出发点是一个很简单的不满：大模型聪明得不像话，却只能待在聊天框里。
+				Minecraft 是我们拥有的最接近"一整个世界"的东西——于是就有了 Numen：
+				让 AI 走出对话，住进一个它能真实感知、真实行动的世界。
+			</p>
+		</section>
+
+		<blockquote class="about-quote">
+			<p>“每一句你说出口的话，都变成世界里真实发生的事。”</p>
+			<cite>— minecraft-numen README</cite>
+		</blockquote>
+
+		<section class="about-block">
+			<h2 class="about-h">这个生态相信什么</h2>
+			<ul class="about-list">
+				<li>AI 应该有身体，不只是嘴——真实假玩家、真实规则、真实后果。</li>
+				<li>平台的能力必须彻底开放——官方有的每一分能力，第三方同样拿得到。</li>
+				<li>打通原版只是开胃菜——让每个模组、每种玩法都拥有自己的智能。</li>
+			</ul>
+		</section>
+
+		<section class="about-block">
+			<h2 class="about-h">找到我</h2>
+			<p class="about-body">
+				<a href="https://github.com/Dwinovo" target="_blank" rel="noopener">github.com/Dwinovo</a>
+				——issue、PR、star，或者直接来 Addons 提交你的作品。
+			</p>
+		</section>
+	</div>
+</Subpage>
+
+<style>
+	.about {
+		max-width: 1080px;
+		margin-inline: auto;
+		padding: clamp(3rem, 7vh, 5rem) 6vw 0;
+	}
+
+	.about-block {
+		border-top: 1px solid var(--hairline);
+		padding: clamp(2.5rem, 5.5vh, 4rem) 0;
+		max-width: 42em;
+	}
+
+	.about-h {
+		font-weight: 700;
+		font-size: clamp(1.2rem, 2vw, 1.6rem);
+		margin: 0 0 clamp(1.2rem, 2.5vh, 1.8rem);
+	}
+
+	.about-body {
+		margin: 0 0 1.1em;
+		font-size: clamp(1rem, 1.4vw, 1.15rem);
+		line-height: 2.1;
+		color: var(--muted);
+	}
+
+	.about-body:last-child {
+		margin-bottom: 0;
+	}
+
+	.about-body a {
+		color: currentColor;
+		text-decoration: underline;
+		text-underline-offset: 4px;
+		text-decoration-thickness: 1px;
+		text-decoration-color: var(--faint);
+	}
+
+	.about-body a:hover {
+		text-decoration-color: currentColor;
+	}
+
+	.about-quote {
+		margin: 0;
+		border-top: 1px solid var(--hairline);
+		padding: clamp(3.5rem, 8vh, 5.5rem) 0;
+	}
+
+	.about-quote p {
+		margin: 0;
+		font-weight: 900;
+		font-size: clamp(1.5rem, 3.2vw, 2.8rem);
+		line-height: 1.5;
+		max-width: 24em;
+	}
+
+	.about-quote cite {
+		display: block;
+		margin-top: 1.4rem;
+		font-style: normal;
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		letter-spacing: 0.15em;
+		color: var(--faint);
+	}
+
+	.about-list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.about-list li {
+		position: relative;
+		padding-left: 1.6rem;
+		margin-bottom: 1em;
+		font-size: clamp(1rem, 1.4vw, 1.15rem);
+		line-height: 2;
+		color: var(--muted);
+	}
+
+	.about-list li::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 0.95em;
+		width: 0.6rem;
+		height: 1px;
+		background-color: var(--moss);
+	}
+</style>

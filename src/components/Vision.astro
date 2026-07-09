@@ -1,0 +1,813 @@
+---
+// Vision — 愿景三部曲
+// 首页的收束叙事：野心从小到大，原版 → 模组宇宙 → 现实世界。
+//
+// 编排语言：一条蜿蜒的道路（road）。
+//   三章左右交错（01 左 / 02 右 / 03 左），尾声落在右侧；
+//   一条 SVG 贝塞尔曲线从第一章节点起笔，在章节之间的留白区
+//   大弧度地左右穿行，依次串起三枚章节节点，终点是尾声
+//   「从一个存档，到你的生活。」旁的 moss 端点——路还没走完。
+//
+//   曲线分三层：14% currentColor 的完整暗轨（永远可见）、
+//   moss 充能层（stroke-dashoffset 挂 ScrollTrigger scrub，滚多少充多少）、
+//   以及一小段更粗更实的能量波前跟随推进；充能越过每章节点时，
+//   节点由 faint 点亮为 moss。路径由 JS 读取节点真实位置动态生成
+//   （Catmull-Rom → 贝塞尔），resize 与 ScrollTrigger refresh 后重算。
+//
+//   每章在文字对侧的留白区衬一张灰调低透明度的章景底纹
+//   （Mojang 官方壁纸，全彩直接展示），随滚动缓慢反向漂移。
+//
+// 本区块不设背景色；装饰色全部由 currentColor 派生（进入时为墨黑）。
+// 动效只动 transform / opacity（stroke-dashoffset 为特许特例）；
+// prefers-reduced-motion 时静态呈现完整充能状态（全 moss 曲线 + 全亮节点）；
+// 无 JS 时曲线不出现，内容完整可读。移动端（<900px）退化为单列，曲线与配图隐藏。
+//
+// 文案只讲愿景：不点名 App、不举任务例子、不带状态标签——避免网页跟着产品进度更新。
+import { Image } from 'astro:assets';
+import meadow from '../assets/meadow-bees-flowers.png';
+import nether from '../assets/nether-landscape.png';
+import skins from '../assets/characters-default-skins.png';
+---
+
+<section class="vision" id="vision" aria-label="愿景三部曲">
+	<div class="vision-inner">
+		<h2 class="sr-only">愿景三部曲：原版、模组宇宙、现实世界</h2>
+
+		<header class="vision-head">
+			<p class="vision-eyebrow"><span class="tick" aria-hidden="true">/</span> 愿景 · The road ahead</p>
+		</header>
+
+		<div class="trilogy">
+			<!-- 蜿蜒主线：path d 由 JS 依据真实布局生成 -->
+			<svg class="road" aria-hidden="true" focusable="false">
+				<path class="road-track"></path>
+				<path class="road-charge"></path>
+				<path class="road-front"></path>
+			</svg>
+
+			<ol class="acts" role="list">
+				<!-- ============ 第一章 · 原版（左） ============ -->
+				<li class="act" data-act="1" data-side="left">
+					<div class="act-figure" aria-hidden="true">
+						<Image src={meadow} alt="" class="act-veil" widths={[640, 960, 1440]} sizes="(min-width: 900px) 30vw, 90vw" loading="lazy" />
+					</div>
+					<div class="act-col">
+						<span class="act-rule" aria-hidden="true"></span>
+						<span class="act-node" aria-hidden="true"></span>
+						<p class="act-kicker">
+							<span class="act-index">01</span>
+							<span class="act-name">原版</span>
+							<span class="act-scale">One world</span>
+						</p>
+						<h3 class="act-title">
+							<span class="line-mask"><span class="line">通关原版，只是开胃菜。</span></span>
+						</h3>
+						<p class="act-body">
+							挖矿、建造、战斗、看家——原版世界的生存法则，它已经烂熟于心。这不是终点，甚至算不上正餐。
+						</p>
+						<div class="act-evidence">
+							<p class="readme-quote">Beating vanilla is just the appetizer. — README</p>
+						</div>
+					</div>
+				</li>
+
+				<!-- ============ 第二章 · 模组宇宙（右） ============ -->
+				<li class="act" data-act="2" data-side="right">
+					<div class="act-figure" aria-hidden="true">
+						<Image src={nether} alt="" class="act-veil" widths={[640, 960, 1440]} sizes="(min-width: 900px) 30vw, 90vw" loading="lazy" />
+					</div>
+					<div class="act-col">
+						<span class="act-rule" aria-hidden="true"></span>
+						<span class="act-node" aria-hidden="true"></span>
+						<p class="act-kicker">
+							<span class="act-index">02</span>
+							<span class="act-name">模组宇宙</span>
+							<span class="act-scale">Every modded world</span>
+						</p>
+						<h3 class="act-title">
+							<span class="line-mask"><span class="line">让每个模组、每种玩法，</span></span>
+							<span class="line-mask"><span class="line">都拥有自己的智能。</span></span>
+						</h3>
+						<p class="act-body">
+							MCP 把模组的内部世界结构化地接进它的感官——机械动力的传动、应用能源的存储网络、通用机械的产线，它将读懂每一套规则，然后上手。
+						</p>
+						<ul class="act-evidence mod-ledger" role="list">
+							<li class="mod-row">
+								<span class="mod-meta">
+									<span class="mod-name">机械动力</span>
+									<span class="mod-en">Create</span>
+								</span>
+							</li>
+							<li class="mod-row">
+								<span class="mod-meta">
+									<span class="mod-name">应用能源 2</span>
+									<span class="mod-en">Applied Energistics 2</span>
+								</span>
+							</li>
+							<li class="mod-row">
+								<span class="mod-meta">
+									<span class="mod-name">通用机械</span>
+									<span class="mod-en">Mekanism</span>
+								</span>
+							</li>
+						</ul>
+					</div>
+				</li>
+
+				<!-- ============ 第三章 · 现实世界（左） ============ -->
+				<li class="act" data-act="3" data-side="left">
+					<div class="act-figure" aria-hidden="true">
+						<Image src={skins} alt="" class="act-veil" widths={[640, 960, 1440]} sizes="(min-width: 900px) 30vw, 90vw" loading="lazy" />
+					</div>
+					<div class="act-col">
+						<span class="act-rule" aria-hidden="true"></span>
+						<span class="act-node" aria-hidden="true"></span>
+						<p class="act-kicker">
+							<span class="act-index">03</span>
+							<span class="act-name">现实世界</span>
+							<span class="act-scale">Beyond the screen</span>
+						</p>
+						<h3 class="act-title">
+							<span class="line-mask"><span class="line">人不在电脑前，</span></span>
+							<span class="line-mask"><span class="line">世界照样运转。</span></span>
+						</h3>
+						<p class="act-body">
+							关掉游戏，它还在。那个世界正在接进你的生活——你常用的每一个地方，都可以是它的入口。你在哪儿，它就在哪儿。
+						</p>
+					</div>
+				</li>
+			</ol>
+
+			<!-- ============ 尾声：主线的终点（暂时的），落在右侧 ============ -->
+			<div class="coda" data-side="right">
+				<span class="coda-node" aria-hidden="true"></span>
+				<p class="coda-line">
+					<span class="line-mask"><span class="line">从一个存档，到你的生活。</span></span>
+				</p>
+				<p class="coda-note">未完 · To be continued</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<style>
+	/* 颜色全部由 currentColor 派生；背景交给页面统一渐变，本区块透明 */
+	.vision {
+		--moss: #86c15c;
+		--hairline: color-mix(in srgb, currentColor 14%, transparent);
+		--muted: color-mix(in srgb, currentColor 58%, transparent);
+		--faint: color-mix(in srgb, currentColor 36%, transparent);
+		--act-gap: clamp(8rem, 20vh, 15rem); /* 章节间的呼吸留白 */
+		--coda-gap: clamp(2.4rem, 4vw, 4.5rem);
+		--font-cjk:
+			'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC',
+			'Microsoft YaHei', sans-serif;
+		--font-mono: 'Cascadia Mono', 'SF Mono', Consolas, ui-monospace, monospace;
+
+		font-family: var(--font-cjk);
+		padding: clamp(10rem, 24vh, 20rem) 6vw clamp(9rem, 22vh, 17rem);
+	}
+
+	.vision-inner {
+		max-width: 1400px;
+		margin-inline: auto;
+	}
+
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		padding: 0;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	/* ---------- 区块题眉 ---------- */
+	.vision-head {
+		margin-bottom: clamp(5rem, 12vh, 9rem);
+	}
+
+	.vision-eyebrow {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		letter-spacing: 0.35em;
+		text-transform: uppercase;
+		color: var(--faint);
+	}
+
+	.vision-eyebrow .tick {
+		margin-right: 0.6em;
+	}
+
+	/* ---------- 蜿蜒主线 ---------- */
+	.trilogy {
+		position: relative;
+	}
+
+	.road {
+		display: none; /* 移动端隐藏；≥900px 显示 */
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		overflow: visible;
+		pointer-events: none;
+	}
+
+	.road path {
+		fill: none;
+	}
+
+	/* 底层轨迹：永远可见的暗线 */
+	.road-track {
+		stroke: var(--hairline);
+		stroke-width: 1;
+	}
+
+	/* 充能层：moss 沿路径随滚动填充（dashoffset 由脚本驱动） */
+	.road-charge {
+		stroke: var(--moss);
+		stroke-width: 1.5;
+		opacity: 0.85;
+	}
+
+	/* 能量波前：充能头部一小段更粗更实的短划——克制，无任何发光 */
+	.road-front {
+		stroke: var(--moss);
+		stroke-width: 2.5;
+	}
+
+	/* ---------- 三章：左右交错 ---------- */
+	.acts {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.act {
+		position: relative;
+	}
+
+	.act-col {
+		position: relative;
+		padding: clamp(4rem, 10vh, 8rem) 0 var(--act-gap);
+	}
+
+	/* 章景配图：立在文字对侧留白区的全彩实录画面，仅桌面出现。
+	   要么不放，放就大大方方——完整彩色，随滚动缓慢视差 */
+	.act-figure {
+		display: none;
+		position: absolute;
+		top: 0;
+		bottom: var(--act-gap);
+		width: 30%;
+		overflow: hidden;
+		pointer-events: none;
+	}
+
+	.act-veil {
+		position: absolute;
+		left: 0;
+		top: -8%;
+		width: 100%;
+		height: 116%;
+		object-fit: cover;
+		will-change: transform;
+	}
+
+	/* 章首发丝线：从节点出发向文字一侧画开 */
+	.act-rule {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 1px;
+		background: var(--hairline);
+		will-change: transform;
+	}
+
+	/* 节点：钉在主线与章首线的交点上；faint 待命，充能经过时点亮 */
+	.act-node {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 9px;
+		height: 9px;
+		background: var(--faint);
+		transform: translate(-50%, -50%);
+		will-change: transform, opacity;
+	}
+
+	.act-node::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: var(--moss);
+		opacity: 0;
+		transition: opacity 0.35s ease;
+	}
+
+	.act-node.lit::after {
+		opacity: 1;
+	}
+
+	/* ---------- 章眉 ---------- */
+	.act-kicker {
+		display: flex;
+		align-items: baseline;
+		gap: 1.4rem;
+		font-family: var(--font-mono);
+		margin-bottom: clamp(2.6rem, 6vh, 4.5rem);
+	}
+
+	.act-index {
+		font-size: 0.78rem;
+		letter-spacing: 0.3em;
+		color: var(--faint);
+	}
+
+	.act-index::before {
+		content: '/ ';
+	}
+
+	.act-name {
+		font-family: var(--font-cjk);
+		font-weight: 700;
+		font-size: 0.95rem;
+		letter-spacing: 0.3em;
+	}
+
+	.act-scale {
+		margin-left: auto;
+		font-size: 0.72rem;
+		letter-spacing: 0.3em;
+		text-transform: uppercase;
+		color: var(--faint);
+		text-align: right;
+	}
+
+	/* ---------- 章题：字号逐章放大——尺度在涨 ---------- */
+	.act-title {
+		font-weight: 900;
+		letter-spacing: 0.01em;
+		line-height: 1.22;
+		margin: 0 0 clamp(2.2rem, 5.5vh, 4rem);
+	}
+
+	.act[data-act='1'] .act-title { font-size: clamp(2.1rem, 4.2vw, 4.3rem); }
+	.act[data-act='2'] .act-title { font-size: clamp(2.3rem, 4.9vw, 5rem); }
+	.act[data-act='3'] .act-title { font-size: clamp(2.5rem, 5.6vw, 5.7rem); }
+
+	.line-mask {
+		display: block;
+		overflow: hidden;
+	}
+
+	.line {
+		display: block;
+		will-change: transform;
+	}
+
+	/* ---------- 章正文 ---------- */
+	.act-body {
+		max-width: 34em;
+		font-size: clamp(1.02rem, 1.5vw, 1.3rem);
+		line-height: 2;
+		color: var(--muted);
+		margin: 0 0 clamp(3rem, 7vh, 5.5rem);
+		will-change: transform;
+	}
+
+	/* ---------- 第一章证据：README 原话 ---------- */
+	.readme-quote {
+		display: inline-block;
+		border-left: 1px solid var(--hairline);
+		padding-left: 1.6rem;
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		letter-spacing: 0.22em;
+		text-transform: uppercase;
+		line-height: 1.9;
+		color: var(--faint);
+		will-change: transform;
+	}
+
+	/* ---------- 第二章证据：模组账目 ---------- */
+	.mod-ledger {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		max-width: 46em;
+	}
+
+	.mod-row {
+		display: flex;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: 2rem;
+		padding-block: clamp(1.3rem, 3vh, 2rem);
+		border-top: 1px solid var(--hairline);
+		will-change: transform;
+	}
+
+	.mod-row:last-child {
+		border-bottom: 1px solid var(--hairline);
+	}
+
+	.mod-meta {
+		display: flex;
+		flex-direction: column;
+		gap: 0.55rem;
+	}
+
+	.mod-name {
+		font-weight: 700;
+		font-size: clamp(1.1rem, 1.7vw, 1.5rem);
+		line-height: 1.3;
+	}
+
+	.mod-en {
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.26em;
+		text-transform: uppercase;
+		color: var(--faint);
+	}
+
+	/* ---------- 尾声 ---------- */
+	.coda {
+		position: relative;
+		padding: clamp(3.5rem, 9vh, 7rem) 0 clamp(2rem, 5vh, 4rem) var(--coda-gap);
+	}
+
+	/* 主线的终点：moss 色端点——路还在往下走 */
+	.coda-node {
+		position: absolute;
+		left: 0;
+		top: calc(clamp(3.5rem, 9vh, 7rem) + 0.62em);
+		width: 11px;
+		height: 11px;
+		background: var(--moss);
+		transform: translate(-50%, -50%);
+		font-size: clamp(1.9rem, 3.8vw, 3.5rem); /* 借字号定位到首行中线 */
+		will-change: transform, opacity;
+	}
+
+	.coda-line {
+		font-weight: 900;
+		font-size: clamp(1.9rem, 3.8vw, 3.5rem);
+		line-height: 1.3;
+		margin: 0;
+	}
+
+	.coda-note {
+		margin-top: clamp(1.4rem, 3.5vh, 2.4rem);
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.3em;
+		text-transform: uppercase;
+		color: var(--faint);
+		will-change: transform;
+	}
+
+	/* ---------- 桌面：左右交错 + 曲线 + 章景底纹 ---------- */
+	@media (min-width: 900px) {
+		.road {
+			display: block;
+		}
+
+		.act-figure {
+			display: block;
+		}
+
+		.act-col {
+			width: 64%;
+		}
+
+		.act[data-side='right'] .act-col {
+			margin-left: auto;
+		}
+
+		/* 左侧章：节点钉在章首线靠主线的一端（右端）；右侧章反之（默认左端） */
+		.act[data-side='left'] .act-node {
+			left: auto;
+			right: 0;
+			transform: translate(50%, -50%);
+		}
+
+		/* 章景底纹落在文字对侧的留白区 */
+		.act[data-side='left'] .act-figure { right: 0; }
+		.act[data-side='right'] .act-figure { left: 0; }
+
+		.coda {
+			width: 64%;
+			margin-left: auto;
+		}
+	}
+
+	/* ---------- 移动端：单列，可读优先 ---------- */
+	@media (max-width: 899px) {
+		.vision {
+			padding-inline: 7vw;
+		}
+
+		.act-kicker {
+			flex-wrap: wrap;
+			gap: 0.9rem 1.1rem;
+		}
+
+		.act-scale {
+			flex-basis: 100%;
+			margin-left: 0;
+			text-align: left;
+		}
+
+		.act[data-act='1'] .act-title { font-size: clamp(1.9rem, 8vw, 2.6rem); }
+		.act[data-act='2'] .act-title { font-size: clamp(2rem, 8.8vw, 2.9rem); }
+		.act[data-act='3'] .act-title { font-size: clamp(2.1rem, 9.6vw, 3.2rem); }
+
+		.mod-row {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.9rem;
+		}
+
+		.coda {
+			padding-left: calc(var(--coda-gap) * 0.72);
+		}
+	}
+
+	/* 降级：点亮过渡也不做 */
+	@media (prefers-reduced-motion: reduce) {
+		.act-node::after {
+			transition: none;
+		}
+	}
+</style>
+
+<script>
+	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+	gsap.registerPlugin(ScrollTrigger);
+
+	const section = document.getElementById('vision');
+	const trilogy = section?.querySelector<HTMLElement>('.trilogy');
+
+	if (section && trilogy) {
+		const svg = trilogy.querySelector<SVGSVGElement>('.road');
+		const trackPath = trilogy.querySelector<SVGPathElement>('.road-track');
+		const chargePath = trilogy.querySelector<SVGPathElement>('.road-charge');
+		const frontPath = trilogy.querySelector<SVGPathElement>('.road-front');
+		const actNodes = Array.from(trilogy.querySelectorAll<HTMLElement>('.act .act-node'));
+		const codaNode = trilogy.querySelector<HTMLElement>('.coda-node');
+
+		// 充能状态：路径总长、波前长度、各章节点在路径上的里程
+		const state = { total: 0, head: 0, stops: [] as { el: HTMLElement; at: number }[] };
+
+		// 站点之间用"垂直切线"的三次贝塞尔连接：进出每个节点都是竖直方向，
+		// y 单调向下，数学上保证曲线永不自交；左右交错的节点自然形成满幅 S 弯。
+		const toBezier = (pts: { x: number; y: number }[]) => {
+			let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+			for (let i = 0; i < pts.length - 1; i++) {
+				const p = pts[i];
+				const q = pts[i + 1];
+				const midY = (p.y + q.y) / 2;
+				d += ` C ${p.x.toFixed(1)} ${midY.toFixed(1)}, ${q.x.toFixed(1)} ${midY.toFixed(1)}, ${q.x.toFixed(1)} ${q.y.toFixed(1)}`;
+			}
+			return d;
+		};
+
+		// 依据真实布局生成路径：读取三章节点与尾声端点的实际位置，
+		// 在相邻站点之间插入一枚摆向对侧留白区的弧顶，再拟合成贝塞尔。
+		// resize 与 ScrollTrigger refresh 后都会重算——比 viewBox 拉伸稳。
+		const buildRoad = () => {
+			if (!svg || !trackPath || !chargePath || !frontPath || !codaNode) return false;
+			if (window.innerWidth < 900) return false;
+			const box = trilogy.getBoundingClientRect();
+			if (box.width === 0) return false;
+
+			svg.setAttribute('viewBox', `0 0 ${Math.round(box.width)} ${Math.round(box.height)}`);
+
+			const anchors = [...actNodes, codaNode].map((el) => {
+				const r = el.getBoundingClientRect();
+				return {
+					x: r.left + r.width / 2 - box.left,
+					y: r.top + r.height / 2 - box.top,
+					side: el.closest<HTMLElement>('[data-side]')?.dataset.side ?? 'left',
+				};
+			});
+
+			const pts = anchors.map((a) => ({ x: a.x, y: a.y }));
+
+			const d = toBezier(pts);
+			trackPath.setAttribute('d', d);
+			chargePath.setAttribute('d', d);
+			frontPath.setAttribute('d', d);
+
+			state.total = chargePath.getTotalLength();
+			state.head = Math.min(150, state.total * 0.06);
+			chargePath.setAttribute('stroke-dasharray', `${state.total}`);
+			frontPath.setAttribute('stroke-dasharray', `${state.head} ${state.total}`);
+
+			// 各章节点的里程：沿路径采样找最近点（节点本身就在路径上）
+			const samples = 320;
+			const samplePts: { x: number; y: number }[] = [];
+			for (let i = 0; i <= samples; i++) {
+				samplePts.push(chargePath.getPointAtLength((state.total * i) / samples));
+			}
+			state.stops = actNodes.map((el, idx) => {
+				const a = anchors[idx];
+				let best = 0;
+				let bestDist = Infinity;
+				samplePts.forEach((p, i) => {
+					const dist = (p.x - a.x) ** 2 + (p.y - a.y) ** 2;
+					if (dist < bestDist) {
+						bestDist = dist;
+						best = i;
+					}
+				});
+				return { el, at: (state.total * best) / samples };
+			});
+			return true;
+		};
+
+		// 充能推进：被波前越过的节点点亮，回滚时熄灭
+		const applyCharge = (progress: number) => {
+			const charged = progress * state.total;
+			state.stops.forEach((stop) => stop.el.classList.toggle('lit', charged >= stop.at - 2));
+		};
+
+		const clearLit = () => actNodes.forEach((el) => el.classList.remove('lit'));
+
+		const mm = gsap.matchMedia();
+		mm.add(
+			{
+				isDesktop: '(min-width: 900px)',
+				isMobile: '(max-width: 899.98px)',
+				reduceMotion: '(prefers-reduced-motion: reduce)',
+			},
+			(context) => {
+				const { isDesktop, reduceMotion } = context.conditions as {
+					isDesktop: boolean;
+					reduceMotion: boolean;
+				};
+
+				// —— 降级：静态呈现完整充能状态（全 moss 曲线 + 全亮节点），无任何动效 ——
+				if (reduceMotion) {
+					actNodes.forEach((el) => el.classList.add('lit'));
+					let ro: ResizeObserver | undefined;
+					if (isDesktop && buildRoad()) {
+						gsap.set(frontPath, { autoAlpha: 0 }); // 波前是过程量，静态下不出现
+						ro = new ResizeObserver(() => buildRoad());
+						ro.observe(trilogy);
+					}
+					return () => {
+						ro?.disconnect();
+						clearLit();
+					};
+				}
+
+				// —— 题眉：轻轻落座 ——
+				gsap.from(section.querySelector('.vision-eyebrow'), {
+					y: 22,
+					autoAlpha: 0,
+					ease: 'power1.out',
+					scrollTrigger: {
+						trigger: section.querySelector('.vision-head'),
+						start: 'top 88%',
+						end: 'top 62%',
+						scrub: 0.5,
+					},
+				});
+
+				// —— 三章：同一套编排语言依次推进 ——
+				// 节点钉下 → 章首线从节点向文字一侧画开 → 章眉落座 → 章题从遮罩升起 → 正文与证据跟上
+				section.querySelectorAll<HTMLElement>('.act').forEach((act) => {
+					const node = act.querySelector<HTMLElement>('.act-node');
+					// 章首线永远从节点出发：左侧章节点在右端，右侧章节点在左端
+					const ruleOrigin = isDesktop && act.dataset.side === 'left' ? 'right center' : 'left center';
+					const tl = gsap.timeline({
+						scrollTrigger: {
+							trigger: act,
+							start: 'top 82%',
+							end: 'top 30%',
+							scrub: 0.5,
+							// 移动端没有曲线：节点随本章显影点亮
+							onUpdate:
+								!isDesktop && node
+									? (self) => node.classList.toggle('lit', self.progress > 0.2)
+									: undefined,
+						},
+					});
+
+					tl.from(node, { scale: 0, autoAlpha: 0, duration: 0.22, ease: 'power1.out' }, 0)
+						.from(
+							act.querySelector('.act-rule'),
+							{ scaleX: 0, transformOrigin: ruleOrigin, ease: 'none' },
+							0
+						)
+						.from(
+							act.querySelectorAll('.act-kicker > *'),
+							{ y: 22, autoAlpha: 0, stagger: 0.1, ease: 'power1.out' },
+							0.08
+						)
+						.from(
+							act.querySelectorAll('.act-title .line'),
+							{ yPercent: 112, stagger: 0.14, duration: 0.85, ease: 'power2.out' },
+							0.18
+						)
+						.from(act.querySelector('.act-body'), { y: 30, autoAlpha: 0, ease: 'power1.out' }, 0.48)
+						.from(
+							act.querySelectorAll('.act-evidence > *'),
+							{ y: 26, autoAlpha: 0, stagger: 0.09, ease: 'power1.out' },
+							0.62
+						);
+
+					// —— 章景底纹：随章节滚过缓慢反向漂移（仅桌面出现） ——
+					const veil = act.querySelector<HTMLElement>('.act-veil');
+					if (isDesktop && veil) {
+						gsap.fromTo(
+							veil,
+							{ yPercent: -6 },
+							{
+								yPercent: 6,
+								ease: 'none',
+								scrollTrigger: { trigger: act, start: 'top bottom', end: 'bottom top', scrub: true },
+							}
+						);
+					}
+				});
+
+				// —— 尾声：moss 端点钉下，收束句从遮罩升起 ——
+				const codaTl = gsap.timeline({
+					scrollTrigger: {
+						trigger: section.querySelector('.coda'),
+						start: 'top 85%',
+						end: 'top 45%',
+						scrub: 0.5,
+					},
+				});
+
+				codaTl
+					.from(section.querySelector('.coda-node'), { scale: 0, autoAlpha: 0, duration: 0.3, ease: 'power1.out' }, 0)
+					.from(
+						section.querySelector('.coda-line .line'),
+						{ yPercent: 112, duration: 0.9, ease: 'power2.out' },
+						0.1
+					)
+					.from(section.querySelector('.coda-note'), { y: 18, autoAlpha: 0, ease: 'power1.out' }, 0.55);
+
+				// —— 主线充能：滚多少，充多少（仅桌面有曲线） ——
+				if (isDesktop) {
+					buildRoad();
+
+					gsap
+						.timeline({
+							defaults: { ease: 'none', duration: 1 },
+							scrollTrigger: {
+								trigger: trilogy,
+								start: 'top 72%',
+								end: 'bottom 78%',
+								scrub: 0.4,
+								invalidateOnRefresh: true,
+								onUpdate: (self) => applyCharge(self.progress),
+								onRefresh: (self) => applyCharge(self.progress),
+							},
+						})
+						// 充能层：dashoffset 从全长退到 0——曲线被 moss 逐段填充
+						.fromTo(
+							chargePath,
+							{ strokeDashoffset: () => state.total },
+							{ strokeDashoffset: 0 },
+							0
+						)
+						// 能量波前：一小段短划贴着充能头部同速推进
+						.fromTo(
+							frontPath,
+							{ strokeDashoffset: () => state.head },
+							{ strokeDashoffset: () => -(state.total - state.head) },
+							0
+						);
+
+					// 布局变化后重建路径：refreshInit 在 ScrollTrigger 重算之前触发，
+					// invalidateOnRefresh 会随后按新的总长重取 dashoffset 起终值
+					const rebuild = () => buildRoad();
+					ScrollTrigger.addEventListener('refreshInit', rebuild);
+					const ro = new ResizeObserver(rebuild);
+					ro.observe(trilogy);
+
+					return () => {
+						ScrollTrigger.removeEventListener('refreshInit', rebuild);
+						ro.disconnect();
+						clearLit();
+					};
+				}
+
+				return () => clearLit();
+			}
+		);
+	}
+</script>

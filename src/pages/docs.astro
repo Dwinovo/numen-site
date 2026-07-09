@@ -1,0 +1,172 @@
+---
+// 开发者文档 —— 第一版
+// 内容来自四个仓库 README 的事实（勿编造 API 细节，深入处链接到源仓库）。
+import Subpage from '../layouts/Subpage.astro';
+---
+
+<Subpage
+	title="开发者文档 — Numen"
+	description="安装 Numen、写一个 Skill、接一个 MCP、引入 numen-api 的开发者指南。"
+	current="docs"
+>
+	<header class="page-head">
+		<p class="page-eyebrow">Docs</p>
+		<h1 class="page-title">让它长出你的能力。</h1>
+		<p class="page-lede">
+			从装上模组到写出自己的扩展，这一页是入口。更深的细节以各仓库的 README 为准——那里永远是最新的。
+		</p>
+	</header>
+
+	<div class="doc">
+		<section class="doc-section">
+			<h2 class="doc-h"><span class="doc-no">01</span>快速开始（玩家）</h2>
+			<p>
+				从 <a href="https://github.com/Dwinovo/minecraft-numen/releases" target="_blank" rel="noopener">minecraft-numen 的 Releases</a>
+				下载与你游戏匹配的版本——支持 Minecraft 1.20.1 起共 11 个版本，Fabric / Forge / NeoForge 三种加载器都有。
+				放进 <code>mods</code> 文件夹，配置你的大模型 API Key，进入游戏就可以对同伴说话了。
+			</p>
+			<p class="doc-note">同伴由你的客户端驱动、使用你自己的 API Key——数据不经过任何第三方服务器。</p>
+		</section>
+
+		<section class="doc-section">
+			<h2 class="doc-h"><span class="doc-no">02</span>写一个 Skill</h2>
+			<p>
+				一个 Markdown 文件就是一条工作流。把它放进
+				<code>config/numen/skills/</code>，同伴就学会了一件新本事——零代码，不需要开发环境。
+			</p>
+			<p>
+				Skill 的写法与内置技能的示例见
+				<a href="https://github.com/Dwinovo/numen-api" target="_blank" rel="noopener">numen-api README</a>。
+			</p>
+		</section>
+
+		<section class="doc-section">
+			<h2 class="doc-h"><span class="doc-no">03</span>接一个 MCP</h2>
+			<p>
+				MCP 把一个模组的内部世界结构化地接进同伴的感官。生态的承诺是：<strong>官方有的每一分能力，第三方同样拿得到</strong>——
+				入站消息走 <code>NumenGateway.enqueue</code>，出站工具走 <code>ToolRegistry.register</code>，两个公开入口就够了。
+			</p>
+			<p>
+				<a href="https://github.com/Dwinovo/numen-qq-mcp" target="_blank" rel="noopener">numen-qq-mcp</a>
+				是官方参考实现（把同伴绑上 QQ）：结构照抄这个仓库即可起步。
+			</p>
+		</section>
+
+		<section class="doc-section">
+			<h2 class="doc-h"><span class="doc-no">04</span>引入 numen-api（模组开发者）</h2>
+			<p>
+				构建产物发布在
+				<a href="https://github.com/Dwinovo/numen-maven" target="_blank" rel="noopener">numen-maven</a>：
+				每个版本 × 每个加载器提供两个工件——<code>:api</code> 瘦包（仅公共接口，编译期用）和完整引擎包（运行期用）。
+			</p>
+			<pre class="doc-code"><code>repositories &#123;
+    maven &#123; url 'https://raw.githubusercontent.com/Dwinovo/numen-maven/main' &#125;
+&#125;
+
+dependencies &#123;
+    // Fabric (Loom)
+    modCompileOnlyApi 'com.dwinovo.numen:numen-api-fabric-1.21.1:0.0.1-SNAPSHOT:api'
+    modRuntimeOnly    'com.dwinovo.numen:numen-api-fabric-1.21.1:0.0.1-SNAPSHOT'
+&#125;</code></pre>
+			<p class="doc-note">
+				NeoForge 用 <code>numen-api-neoforge-&lt;mc版本&gt;</code> 坐标（compileOnly / runtimeOnly）。当前版本为
+				0.0.1-SNAPSHOT，API 稳定后会发布正式 tag——坐标细节以 numen-maven README 为准。
+			</p>
+		</section>
+
+		<section class="doc-section">
+			<h2 class="doc-h"><span class="doc-no">05</span>许可</h2>
+			<p>
+				引擎代码 <strong>LGPL-3.0</strong>，公开 API <strong>MIT</strong>——你可以放心把它写进自己的模组，无论开源与否。
+			</p>
+		</section>
+	</div>
+</Subpage>
+
+<style>
+	.doc {
+		max-width: 1080px;
+		margin-inline: auto;
+		padding: clamp(3rem, 7vh, 5rem) 6vw 0;
+	}
+
+	.doc-section {
+		border-top: 1px solid var(--hairline);
+		padding: clamp(2.5rem, 5.5vh, 4rem) 0;
+		max-width: 46em;
+	}
+
+	.doc-h {
+		display: flex;
+		align-items: baseline;
+		gap: 1.2rem;
+		font-weight: 700;
+		font-size: clamp(1.3rem, 2.2vw, 1.8rem);
+		margin: 0 0 clamp(1.4rem, 3vh, 2rem);
+	}
+
+	.doc-no {
+		font-family: var(--font-mono);
+		font-weight: 400;
+		font-size: 0.8rem;
+		letter-spacing: 0.15em;
+		color: var(--faint);
+	}
+
+	.doc-section p {
+		margin: 0 0 1.1em;
+		font-size: clamp(0.98rem, 1.3vw, 1.1rem);
+		line-height: 2;
+		color: var(--muted);
+	}
+
+	.doc-section p:last-child {
+		margin-bottom: 0;
+	}
+
+	.doc-section strong {
+		color: currentColor;
+		font-weight: 700;
+	}
+
+	.doc-section a {
+		color: currentColor;
+		text-decoration: underline;
+		text-underline-offset: 4px;
+		text-decoration-thickness: 1px;
+		text-decoration-color: var(--faint);
+	}
+
+	.doc-section a:hover {
+		text-decoration-color: currentColor;
+	}
+
+	.doc-section code {
+		font-family: var(--font-mono);
+		font-size: 0.88em;
+		border: 1px solid var(--hairline);
+		padding: 0.08em 0.4em;
+	}
+
+	.doc-code {
+		margin: 1.6rem 0;
+		padding: clamp(1.2rem, 2.5vw, 1.8rem);
+		border: 1px solid var(--hairline);
+		overflow-x: auto;
+	}
+
+	.doc-code code {
+		border: none;
+		padding: 0;
+		font-family: var(--font-mono);
+		font-size: clamp(0.78rem, 1.05vw, 0.92rem);
+		line-height: 1.9;
+		color: currentColor;
+		white-space: pre;
+	}
+
+	.doc-note {
+		font-size: 0.92em;
+		color: var(--faint);
+	}
+</style>

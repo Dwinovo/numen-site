@@ -1,0 +1,88 @@
+---
+// 全站顶栏 —— 固定、极简、一行。
+// mix-blend-mode: difference 让文字在黑底 / 米白底 / 实录图上自动反色，
+// 无需任何滚动监听或分区换色逻辑。
+const { current = 'home' } = Astro.props as {
+	current?: 'home' | 'addons' | 'docs' | 'about';
+};
+---
+
+<header class="site-nav">
+	<a class="nav-mark" href="/">NUMEN</a>
+	<nav class="nav-links" aria-label="站点导航">
+		<a href="/" class:list={['nav-link', current === 'home' && 'is-current']}>首页</a>
+		<a href="/addons" class:list={['nav-link', current === 'addons' && 'is-current']}>Addons</a>
+		<a href="/docs" class:list={['nav-link', current === 'docs' && 'is-current']}>文档</a>
+		<a href="/about" class:list={['nav-link', current === 'about' && 'is-current']}>关于</a>
+		<a href="https://github.com/Dwinovo/minecraft-numen" target="_blank" rel="noopener" class="nav-link">GitHub ↗</a>
+	</nav>
+</header>
+
+<style>
+	.site-nav {
+		position: fixed;
+		inset-inline: 0;
+		top: 0;
+		z-index: 100;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: clamp(1.1rem, 2.5vh, 1.7rem) 5vw;
+		mix-blend-mode: difference;
+		color: #fef9ed;
+		font-family: 'Cascadia Mono', 'SF Mono', Consolas, ui-monospace, monospace;
+		animation: nav-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+		animation-delay: 0.2s;
+	}
+
+	@keyframes nav-in {
+		from {
+			opacity: 0;
+			transform: translateY(-8px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	.nav-mark {
+		font-weight: 900;
+		font-size: 0.95rem;
+		letter-spacing: 0.32em;
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.nav-links {
+		display: flex;
+		gap: clamp(1.4rem, 3vw, 2.6rem);
+		font-size: 0.78rem;
+		letter-spacing: 0.18em;
+	}
+
+	.nav-link {
+		color: inherit;
+		text-decoration: none;
+		opacity: 0.55;
+		transition: opacity 0.2s ease;
+	}
+
+	.nav-link:hover,
+	.nav-link:focus-visible {
+		opacity: 1;
+	}
+
+	.is-current {
+		opacity: 1;
+		text-decoration: underline;
+		text-underline-offset: 6px;
+		text-decoration-thickness: 1px;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.site-nav {
+			animation: none;
+		}
+	}
+</style>

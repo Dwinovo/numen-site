@@ -2,11 +2,12 @@
 import { Image } from 'astro:assets';
 import '../styles/global.css';
 import hero from '../assets/hero.png';
+import Nav from '../components/Nav.astro';
 import Manifesto from '../components/Manifesto.astro';
 import Demo from '../components/Demo.astro';
 import Interlude from '../components/Interlude.astro';
-import Stats from '../components/Stats.astro';
-import ExtendFooter from '../components/ExtendFooter.astro';
+import Vision from '../components/Vision.astro';
+import Footer from '../components/Footer.astro';
 ---
 
 <html lang="zh-CN">
@@ -23,6 +24,7 @@ import ExtendFooter from '../components/ExtendFooter.astro';
 		/>
 	</head>
 	<body>
+		<Nav current="home" />
 		<main id="page">
 			<!-- ============ 首屏（钉住，被后续内容盖过） ============ -->
 			<section class="hero">
@@ -53,8 +55,8 @@ import ExtendFooter from '../components/ExtendFooter.astro';
 				<Manifesto />
 				<Demo />
 				<Interlude />
-				<Stats />
-				<ExtendFooter />
+				<Vision />
+				<Footer />
 			</div>
 		</main>
 	</body>
@@ -153,7 +155,7 @@ import ExtendFooter from '../components/ExtendFooter.astro';
 			backgroundColor: '#fef9ed',
 			color: '#171310',
 			ease: 'none',
-			scrollTrigger: { trigger: '#stats', start: 'top 80%', end: 'top 20%', scrub: true },
+			scrollTrigger: { trigger: '#vision', start: 'top 80%', end: 'top 20%', scrub: true },
 		});
 		// 页脚不做环境色渐变——它自带深色背景，随滚动作为一个实体块自然推入，
 		// 颜色边界与元素边界重合，不会出现"整页突然变黑"的体感
