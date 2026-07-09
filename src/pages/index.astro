@@ -1,0 +1,165 @@
+---
+import { Image } from 'astro:assets';
+import '../styles/global.css';
+import hero from '../assets/hero.png';
+import Manifesto from '../components/Manifesto.astro';
+import Demo from '../components/Demo.astro';
+import Interlude from '../components/Interlude.astro';
+import Stats from '../components/Stats.astro';
+import ExtendFooter from '../components/ExtendFooter.astro';
+---
+
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="generator" content={Astro.generator} />
+		<title>Numen — 言出法随</title>
+		<meta
+			name="description"
+			content="Numen 让大模型走出聊天框，住进 Minecraft：一个会感知、会规划、会动手的 AI 同伴。你说出口，他便成真。"
+		/>
+	</head>
+	<body>
+		<main id="page">
+			<!-- ============ 首屏（钉住，被后续内容盖过） ============ -->
+			<section class="hero">
+				<div class="hero-img-wrap absolute inset-0">
+					<Image
+						src={hero}
+						alt="Minecraft 洞穴中仰望雪山与天光"
+						class="hero-img h-full w-full object-cover"
+						loading="eager"
+						fetchpriority="high"
+						widths={[1280, 1920, 2560]}
+						sizes="100vw"
+					/>
+				</div>
+				<div class="absolute inset-0 bg-black/25"></div>
+
+				<div class="relative z-10 flex h-full flex-col justify-center px-[5vw] -translate-y-[19vh]">
+					<h1 class="hero-title w-full" aria-label="NUMEN">
+						<span>N</span><span>U</span><span>M</span><span>E</span><span>N</span>
+					</h1>
+				</div>
+				<p class="hero-subtitle absolute bottom-[4vh] left-[5vw] z-10">你说出口，他便成真。</p>
+				<p class="scroll-cue absolute bottom-[4vh] right-[5vw] z-10" aria-hidden="true">Scroll</p>
+			</section>
+
+			<!-- ============ 正文（滑过首屏） ============ -->
+			<div class="content" id="content">
+				<Manifesto />
+				<Demo />
+				<Interlude />
+				<Stats />
+				<ExtendFooter />
+			</div>
+		</main>
+	</body>
+</html>
+
+<style>
+	main {
+		background-color: #0e0c0a;
+		color: #fef9ed;
+		font-family:
+			'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC',
+			'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+	}
+
+	/* ---------- 首屏 ---------- */
+	.hero {
+		position: relative;
+		height: 100dvh;
+		width: 100%;
+		overflow: hidden;
+	}
+
+	.hero-title,
+	.hero-subtitle {
+		color: #fef9ed;
+		user-select: none;
+	}
+
+	.hero-title {
+		display: flex;
+		justify-content: space-between;
+		font-weight: 900;
+		/* 实测五字母总宽的不溢出上限为 23.69vw（随系统字体略有差异），留 1% 余量 */
+		font-size: 23.5vw;
+		line-height: 1;
+	}
+
+	.hero-subtitle {
+		font-weight: 500;
+		font-size: clamp(1.1rem, 4vw, 5rem);
+		line-height: 1.4;
+	}
+
+	.scroll-cue {
+		color: #fef9ed;
+		font-family: 'Cascadia Mono', 'SF Mono', Consolas, ui-monospace, monospace;
+		font-size: 0.8rem;
+		letter-spacing: 0.3em;
+		text-transform: uppercase;
+		opacity: 0.6;
+	}
+
+	/* ---------- 正文容器（盖过钉住的首屏，背景色由脚本随滚动渐变） ---------- */
+	.content {
+		position: relative;
+		z-index: 10;
+		background-color: #0e0c0a;
+	}
+</style>
+
+<script>
+	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+	import Lenis from 'lenis';
+
+	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	if (!reduced) {
+		gsap.registerPlugin(ScrollTrigger);
+
+		// 平滑滚动：全站唯一的 Lenis 实例，与 ScrollTrigger 共用一个时钟
+		const lenis = new Lenis({ lerp: 0.09 });
+		lenis.on('scroll', ScrollTrigger.update);
+		gsap.ticker.add((time) => lenis.raf(time * 1000));
+		gsap.ticker.lagSmoothing(0);
+
+		// 首屏：钉住，正文像幕布一样盖上来；同时背景推近、文字上浮
+		ScrollTrigger.create({
+			trigger: '.hero',
+			start: 'top top',
+			end: 'bottom top',
+			pin: true,
+			pinSpacing: false,
+		});
+		gsap
+			.timeline({
+				scrollTrigger: { trigger: '#content', start: 'top bottom', end: 'top top', scrub: true },
+			})
+			.to('.hero-img', { scale: 1.15, ease: 'none' }, 0)
+			.to('.hero-title', { yPercent: -30, autoAlpha: 0, ease: 'none' }, 0)
+			.to('.hero-subtitle, .scroll-cue', { autoAlpha: 0, ease: 'none' }, 0);
+
+		// 背景色全局联动：洞穴黑 → 米白（数字区起）→ 页脚回到黑
+		const content = document.getElementById('content');
+		gsap.to(content, {
+			backgroundColor: '#fef9ed',
+			color: '#171310',
+			ease: 'none',
+			scrollTrigger: { trigger: '#stats', start: 'top 80%', end: 'top 20%', scrub: true },
+		});
+		// 页脚不做环境色渐变——它自带深色背景，随滚动作为一个实体块自然推入，
+		// 颜色边界与元素边界重合，不会出现"整页突然变黑"的体感
+
+		// 组件各自的 ScrollTrigger 注册完后，统一按文档顺序刷新一次，
+		// 避免 pin 区块的先后顺序影响定位计算
+		requestAnimationFrame(() => ScrollTrigger.refresh());
+	}
+</script>

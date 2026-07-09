@@ -1,0 +1,609 @@
+---
+// 生态区 —— 编辑部式仓库索引
+// 米白（--cream）底、墨黑（--ink）文字的区块；样式全部由 currentColor 派生，
+// 区块本身不设背景色，随页面背景联动自然生效。
+// 桌面端 hover 行时，一帧对应的游戏实录随光标浮现。
+import { Image } from 'astro:assets';
+import imgFlagship from '../assets/key-art-adventure.png';
+import imgEngine from '../assets/deep-dark-warden.png';
+import imgBridge from '../assets/village-pillage-scene.png';
+import imgMaven from '../assets/cave-mineshaft.png';
+
+const repos = [
+	{
+		index: '01',
+		name: 'minecraft-numen',
+		tag: '旗舰模组',
+		desc: '完整的 AI 同伴模组。自然语言下达任务，自动分解、规划、执行——从下矿采铁到通关原版。',
+		href: 'https://github.com/Dwinovo/minecraft-numen',
+		img: imgFlagship,
+	},
+	{
+		index: '02',
+		name: 'numen-api',
+		tag: '引擎',
+		desc: '纯调度器设计的同伴引擎：智能体循环、感知、行动、记忆。官方有的每一分能力，第三方同样拿得到。',
+		href: 'https://github.com/Dwinovo/numen-api',
+		img: imgEngine,
+	},
+	{
+		index: '03',
+		name: 'numen-qq-mcp',
+		tag: 'QQ 桥接',
+		desc: '把游戏里的同伴绑上 QQ。人不在电脑前，私聊一句“把家里的小麦收了”，回来时箱子已经满了。',
+		href: 'https://github.com/Dwinovo/numen-qq-mcp',
+		img: imgBridge,
+	},
+	{
+		index: '04',
+		name: 'numen-maven',
+		tag: '开发者仓库',
+		desc: 'numen-api 构建产物的 Maven 仓库，api / full 双工件分发。写你自己的工具包，从一行依赖开始。',
+		href: 'https://github.com/Dwinovo/numen-maven',
+		img: imgMaven,
+	},
+];
+---
+
+<section class="ecosystem" id="ecosystem">
+	<header class="eco-head">
+		<p class="eyebrow">生态</p>
+		<h2 class="eco-title">
+			<span class="title-mask"><span class="title-line">一个引擎，</span></span><span
+				class="title-mask"><span class="title-line">一套生态。</span></span>
+		</h2>
+	</header>
+
+	<div class="repo-list">
+		{
+			repos.map((repo, i) => (
+				<a
+					class="repo-row"
+					href={repo.href}
+					target="_blank"
+					rel="noopener"
+					data-eco-row
+				>
+					<span class="row-line" aria-hidden="true" data-eco-line />
+					<span class="repo-index" aria-hidden="true" data-eco-index>
+						{repo.index}
+					</span>
+					<div class="repo-head" data-eco-body>
+						<h3 class="repo-name">{repo.name}</h3>
+						<span class="repo-tag">{repo.tag}</span>
+					</div>
+					<p class="repo-desc" data-eco-body>
+						{repo.desc}
+					</p>
+					<span class="repo-arrow" aria-hidden="true" data-eco-arrow>
+						<span class="arrow-glyph">↗</span>
+						<span class="arrow-glyph arrow-ghost">↗</span>
+					</span>
+					{i === repos.length - 1 && (
+						<span class="row-line row-line--end" aria-hidden="true" data-eco-line />
+					)}
+				</a>
+			))
+		}
+	</div>
+
+	<!-- hover 实录预览：跟随光标的一帧画面（仅桌面指针设备）
+	     层级：float 定位跟随 → tilt 速度倾斜 → frame 揭示裁切 → mask 方向遮罩 → img 内视差 -->
+	<div class="eco-float" aria-hidden="true" data-eco-float>
+		<div class="eco-float-tilt" data-eco-tilt>
+			<div class="eco-float-frame" data-eco-frame>
+				{
+					repos.map((repo, i) => (
+						<div class="eco-float-mask" data-eco-mask={String(i)}>
+							<Image
+								src={repo.img}
+								alt=""
+								class="eco-float-img"
+								data-eco-float-img={String(i)}
+								widths={[640, 960]}
+								sizes="24vw"
+								loading="lazy"
+							/>
+						</div>
+					))
+				}
+			</div>
+		</div>
+	</div>
+</section>
+
+<style>
+	/* ============ 令牌（自包含，全部由 currentColor 派生） ============ */
+	.ecosystem {
+		--moss: #86c15c;
+		--hairline: color-mix(in srgb, currentColor 14%, transparent);
+		--muted: color-mix(in srgb, currentColor 58%, transparent);
+		--faint: color-mix(in srgb, currentColor 36%, transparent);
+		--wash: color-mix(in srgb, currentColor 4%, transparent);
+		--font-cjk:
+			'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC',
+			'Microsoft YaHei', sans-serif;
+		--font-mono: 'Cascadia Mono', 'SF Mono', Consolas, ui-monospace, monospace;
+		--ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+		--bleed: clamp(1.25rem, 2.5vw, 2.75rem);
+
+		font-family: var(--font-cjk);
+		padding: clamp(9rem, 24vh, 18rem) 6vw;
+		max-width: 1400px;
+		margin-inline: auto;
+	}
+
+	/* ============ 区头 ============ */
+	.eco-head {
+		margin-bottom: clamp(4.5rem, 11vh, 8rem);
+	}
+
+	.eyebrow {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		letter-spacing: 0.35em;
+		text-transform: uppercase;
+		color: var(--faint);
+		margin: 0 0 clamp(2.5rem, 6vh, 4.5rem);
+	}
+
+	.eco-title {
+		font-weight: 900;
+		font-size: clamp(2.5rem, 5.4vw, 5.1rem);
+		line-height: 1.18;
+		letter-spacing: 0.01em;
+		margin: 0;
+	}
+
+	.title-mask {
+		display: inline-block;
+		overflow: hidden;
+		vertical-align: bottom;
+	}
+
+	.title-line {
+		display: inline-block;
+	}
+
+	/* ============ 仓库索引 ============ */
+	.repo-list {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.repo-row {
+		position: relative;
+		display: grid;
+		grid-template-columns:
+			clamp(3rem, 5vw, 4.75rem)
+			minmax(0, 0.85fr)
+			minmax(0, 1.4fr)
+			clamp(2.25rem, 3.5vw, 3.25rem);
+		column-gap: clamp(1.25rem, 3vw, 3.5rem);
+		align-items: baseline;
+		padding: clamp(3rem, 7.5vh, 5.25rem) var(--bleed);
+		margin-inline: calc(var(--bleed) * -1);
+		text-decoration: none;
+		color: inherit;
+		background-color: transparent;
+		transition: background-color 0.5s var(--ease-out);
+	}
+
+	.repo-row:hover,
+	.repo-row:focus-visible {
+		background-color: var(--wash);
+	}
+
+	.repo-row:focus-visible {
+		outline: 1px solid currentColor;
+		outline-offset: -1px;
+	}
+
+	/* 发丝线：独立元素，供入场时从左向右“画”出 */
+	.row-line {
+		position: absolute;
+		top: 0;
+		left: var(--bleed);
+		right: var(--bleed);
+		height: 1px;
+		background-color: var(--hairline);
+		pointer-events: none;
+	}
+
+	.row-line--end {
+		top: auto;
+		bottom: 0;
+	}
+
+	/* 序号 */
+	.repo-index {
+		font-family: var(--font-mono);
+		font-size: clamp(0.85rem, 1vw, 1rem);
+		color: var(--faint);
+		transition: color 0.35s var(--ease-out);
+	}
+
+	.repo-row:hover .repo-index,
+	.repo-row:focus-visible .repo-index {
+		color: var(--moss);
+	}
+
+	/* 名称 + 分类 */
+	.repo-head {
+		display: flex;
+		flex-direction: column;
+		gap: 0.85rem;
+		transition: transform 0.5s var(--ease-out);
+	}
+
+	.repo-row:hover .repo-head,
+	.repo-row:focus-visible .repo-head {
+		transform: translateX(0.35em);
+	}
+
+	.repo-name {
+		font-family: var(--font-mono);
+		font-weight: 700;
+		font-size: clamp(1.45rem, 2.5vw, 2.3rem);
+		line-height: 1.15;
+		margin: 0;
+	}
+
+	.repo-tag {
+		font-family: var(--font-mono);
+		font-size: clamp(0.78rem, 0.95vw, 0.9rem);
+		letter-spacing: 0.22em;
+		color: var(--faint);
+	}
+
+	/* 描述 */
+	.repo-desc {
+		font-size: clamp(1.02rem, 1.45vw, 1.25rem);
+		line-height: 2;
+		color: var(--muted);
+		margin: 0;
+		max-width: 36em;
+		transition: color 0.5s var(--ease-out);
+	}
+
+	.repo-row:hover .repo-desc,
+	.repo-row:focus-visible .repo-desc {
+		color: currentColor;
+	}
+
+	/* 箭头：双字形滑换 —— 一枚向右上离场，另一枚从左下补位 */
+	.repo-arrow {
+		position: relative;
+		justify-self: end;
+		align-self: baseline;
+		display: inline-block;
+		overflow: hidden;
+		font-size: clamp(1.3rem, 1.9vw, 1.8rem);
+		line-height: 1;
+		color: var(--faint);
+		transition: color 0.35s var(--ease-out);
+	}
+
+	.arrow-glyph {
+		display: block;
+		transition: transform 0.45s var(--ease-out);
+	}
+
+	.arrow-ghost {
+		position: absolute;
+		inset: 0;
+		transform: translate(-110%, 110%);
+	}
+
+	.repo-row:hover .repo-arrow,
+	.repo-row:focus-visible .repo-arrow {
+		color: currentColor;
+	}
+
+	.repo-row:hover .arrow-glyph:not(.arrow-ghost),
+	.repo-row:focus-visible .arrow-glyph:not(.arrow-ghost) {
+		transform: translate(110%, -110%);
+	}
+
+	.repo-row:hover .arrow-ghost,
+	.repo-row:focus-visible .arrow-ghost {
+		transform: translate(0, 0);
+	}
+
+	/* ============ hover 实录预览（跟随光标的一帧画面） ============ */
+	/* 所有动态（跟随/倾斜/揭示/切换/视差）都由 GSAP 驱动 transform、opacity
+	   与 frame 上的 clip-path；CSS 只负责布局与初始隐藏。 */
+	.eco-float {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: clamp(240px, 24vw, 400px);
+		aspect-ratio: 16 / 10;
+		z-index: 40;
+		opacity: 0;
+		pointer-events: none;
+		display: none;
+		will-change: transform;
+	}
+
+	.eco-float-tilt,
+	.eco-float-frame {
+		width: 100%;
+		height: 100%;
+	}
+
+	.eco-float-frame {
+		position: relative;
+		overflow: hidden;
+	}
+
+	.eco-float-mask {
+		position: absolute;
+		inset: 0;
+		overflow: hidden;
+		opacity: 0;
+	}
+
+	.eco-float :global(.eco-float-img) {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+		.eco-float {
+			display: block;
+		}
+	}
+
+	/* ============ 响应式 ============ */
+	@media (max-width: 900px) {
+		.repo-row {
+			grid-template-columns: auto minmax(0, 1fr);
+			row-gap: 1.4rem;
+			align-items: baseline;
+			padding-block: clamp(2.4rem, 6vh, 3.5rem);
+		}
+
+		.repo-desc {
+			grid-column: 2;
+		}
+
+		.repo-arrow {
+			display: none;
+		}
+
+		.repo-row:hover .repo-head,
+		.repo-row:focus-visible .repo-head {
+			transform: none;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.repo-row,
+		.repo-index,
+		.repo-head,
+		.repo-desc,
+		.repo-arrow,
+		.arrow-glyph {
+			transition: none;
+		}
+	}
+</style>
+
+<script>
+	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+	if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		gsap.registerPlugin(ScrollTrigger);
+
+		const section = document.getElementById('ecosystem');
+		if (section) {
+			const q = gsap.utils.selector(section);
+
+			// —— 区头：eyebrow 先落座，标题两段从遮罩里依次抬升 ——
+			gsap
+				.timeline({
+					scrollTrigger: { trigger: section, start: 'top 78%' },
+					defaults: { ease: 'power3.out' },
+				})
+				.from(q('.eyebrow'), { autoAlpha: 0, y: 18, duration: 0.7 })
+				.from(
+					q('.title-line'),
+					{ yPercent: 115, duration: 1.05, ease: 'power4.out', stagger: 0.14 },
+					0.15
+				);
+
+			// —— 行入场：每行自成一拍——发丝线先从左向右画出，
+			//    序号滑入，名称与描述错拍浮起，箭头最后就位 ——
+			const rows = gsap.utils.toArray<HTMLElement>(q('[data-eco-row]'));
+			rows.forEach((row) => {
+				gsap
+					.timeline({
+						scrollTrigger: { trigger: row, start: 'top 88%' },
+						defaults: { ease: 'power3.out' },
+					})
+					.from(row.querySelectorAll('[data-eco-line]'), {
+						scaleX: 0,
+						transformOrigin: 'left center',
+						duration: 1.1,
+						ease: 'expo.out',
+					})
+					.from(
+						row.querySelector('[data-eco-index]'),
+						{ autoAlpha: 0, x: -16, duration: 0.6 },
+						0.18
+					)
+					.from(
+						row.querySelectorAll('[data-eco-body]'),
+						{ autoAlpha: 0, y: 28, duration: 0.85, stagger: 0.12 },
+						0.26
+					)
+					.from(
+						row.querySelector('[data-eco-arrow]'),
+						{ autoAlpha: 0, x: -12, y: 12, duration: 0.55 },
+						0.55
+					);
+			});
+
+			// —— hover 实录预览：画框带惯性倾斜地跟随光标；
+			//    行间切换有方向感；出现是揭示、离开是收拢 ——
+			const float = section.querySelector<HTMLElement>('[data-eco-float]');
+			const canHover = window.matchMedia(
+				'(hover: hover) and (pointer: fine) and (min-width: 1024px)'
+			).matches;
+			const tilt = float?.querySelector<HTMLElement>('[data-eco-tilt]');
+			const frame = float?.querySelector<HTMLElement>('[data-eco-frame]');
+			if (float && canHover && tilt && frame) {
+				const masks = gsap.utils.toArray<HTMLElement>(
+					float.querySelectorAll('[data-eco-mask]')
+				);
+				const imgs = gsap.utils.toArray<HTMLElement>(
+					float.querySelectorAll('[data-eco-float-img]')
+				);
+
+				const CLIP_OPEN = 'inset(0% 0% 0% 0%)';
+				const CLIP_START = 'inset(16% 13% 16% 13%)';
+				const CLIP_COLLAPSED = 'inset(50% 50% 50% 50%)';
+
+				// 图比画框稍大，为内视差留出余量
+				gsap.set(imgs, { scale: 1.08 });
+				gsap.set(masks, { autoAlpha: 0 });
+
+				// ① 跟随：quickTo 缓动位移，画框慢半拍地追光标（隐藏时也持续追，
+				//    保证首次出现时已经在光标旁）
+				const xTo = gsap.quickTo(float, 'x', { duration: 0.55, ease: 'power3' });
+				const yTo = gsap.quickTo(float, 'y', { duration: 0.55, ease: 'power3' });
+
+				section.addEventListener('mousemove', (e) => {
+					xTo(e.clientX + 32);
+					yTo(e.clientY - float.offsetHeight * 0.5);
+				});
+
+				// ② 惯性倾斜 + 内视差：以画框自身（已被 quickTo 平滑）的逐帧位移作
+				//    速度源——水平速度折成 rotate/skew，内层图做轻微反向位移；
+				//    光标停下后位移归零，倾斜与视差随 lerp 自然回正
+				const rotSet = gsap.quickSetter(tilt, 'rotation', 'deg');
+				const skewSet = gsap.quickSetter(tilt, 'skewX', 'deg');
+				const parXSet = gsap.quickSetter(imgs, 'x', 'px');
+				const parYSet = gsap.quickSetter(imgs, 'y', 'px');
+				let prevX = 0;
+				let prevY = 0;
+				let rot = 0;
+				let skew = 0;
+				let parX = 0;
+				let parY = 0;
+
+				gsap.ticker.add(() => {
+					const fx = Number(gsap.getProperty(float, 'x'));
+					const fy = Number(gsap.getProperty(float, 'y'));
+					const dx = fx - prevX;
+					const dy = fy - prevY;
+					prevX = fx;
+					prevY = fy;
+
+					const k = Math.min(1, 0.14 * gsap.ticker.deltaRatio());
+					rot += (gsap.utils.clamp(-8, 8, dx * 0.38) - rot) * k;
+					skew += (gsap.utils.clamp(-6, 6, dx * 0.24) - skew) * k;
+					// clamp 不越过 scale 1.08 在最小画框下留出的余量，避免露出遮罩边
+					parX += (gsap.utils.clamp(-9, 9, dx * -0.7) - parX) * k;
+					parY += (gsap.utils.clamp(-6, 6, dy * -0.55) - parY) * k;
+					rotSet(rot);
+					skewSet(skew);
+					parXSet(parX);
+					parYSet(parY);
+				});
+
+				// ③ 出现 / 切换 / 收拢
+				let active = -1;
+				let shown = false;
+				let switchTl: gsap.core.Timeline | null = null;
+
+				const killTransitions = () => {
+					switchTl?.kill();
+					switchTl = null;
+					gsap.killTweensOf(frame);
+				};
+
+				// 首次出现：clip-path 内缩 + scale 0.85 一起向外揭示，expo.out 落位
+				const reveal = (i: number) => {
+					killTransitions();
+					shown = true;
+					active = i;
+					gsap.set(masks, { autoAlpha: 0, yPercent: 0, zIndex: 0 });
+					gsap.set(imgs, { yPercent: 0 });
+					gsap.set(masks[i], { autoAlpha: 1 });
+					gsap.set(float, { autoAlpha: 1 });
+					gsap.fromTo(
+						frame,
+						{ scale: 0.85, clipPath: CLIP_START },
+						{ scale: 1, clipPath: CLIP_OPEN, duration: 0.75, ease: 'expo.out' }
+					);
+				};
+
+				// 行间切换：新图的遮罩从移动方向整幅滑入，内层图反向欠位（净位移
+				//    约 10%），旧图向反方向让位——有方向感，而不是原地交叉淡化。
+				//    快速扫过时不回滚上一次的中间态，直接让新遮罩盖过当前画面。
+				const switchTo = (i: number) => {
+					if (i === active) return;
+					const dir = i > active ? 1 : -1;
+					const prev = active;
+					active = i;
+					switchTl?.kill();
+					masks.forEach((m, j) => gsap.set(m, { zIndex: j === i ? 2 : 1 }));
+					gsap.set(masks[i], { autoAlpha: 1 });
+					switchTl = gsap.timeline({
+						defaults: { duration: 0.65, ease: 'expo.out' },
+						onComplete: () => {
+							masks.forEach((m, j) => {
+								if (j !== i) gsap.set(m, { autoAlpha: 0, yPercent: 0 });
+							});
+							gsap.set(imgs[prev], { yPercent: 0 });
+							switchTl = null;
+						},
+					});
+					switchTl
+						.fromTo(masks[i], { yPercent: dir * 101 }, { yPercent: 0 }, 0)
+						.fromTo(imgs[i], { yPercent: dir * -91 }, { yPercent: 0 }, 0)
+						.to(
+							imgs[prev],
+							{ yPercent: dir * -12, duration: 0.6, ease: 'power2.out' },
+							0
+						);
+				};
+
+				// 离开列表：clip-path 向中心收拢、scale 微缩后整体隐藏，不是淡出
+				const collapse = () => {
+					if (!shown) return;
+					shown = false;
+					active = -1;
+					killTransitions();
+					gsap.to(frame, {
+						clipPath: CLIP_COLLAPSED,
+						scale: 0.88,
+						duration: 0.4,
+						ease: 'power3.in',
+						onComplete: () => {
+							gsap.set(float, { autoAlpha: 0 });
+							gsap.set(masks, { autoAlpha: 0, yPercent: 0 });
+							gsap.set(imgs, { yPercent: 0 });
+						},
+					});
+				};
+
+				rows.forEach((row, i) => {
+					row.addEventListener('mouseenter', () => {
+						if (shown) switchTo(i);
+						else reveal(i);
+					});
+				});
+
+				const list = section.querySelector('.repo-list');
+				list?.addEventListener('mouseleave', collapse);
+			}
+		}
+	}
+</script>

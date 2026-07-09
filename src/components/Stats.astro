@@ -1,0 +1,361 @@
+---
+// Stats — 数字区
+// 账本式编辑排版：三条全宽大行依次落账，第四个数字「0」单独成章。
+// 本区块不设背景色，所有装饰色由 currentColor 派生，文字色继承父级。
+---
+
+<section class="stats" id="stats" aria-label="Numen 的数字">
+	<div class="stats-inner">
+		<header class="stats-head">
+			<p class="stats-eyebrow"><span class="tick" aria-hidden="true">/</span> 数字 · By the numbers</p>
+		</header>
+
+		<ul class="ledger">
+			<li class="stat-row">
+				<span class="stat-rule" aria-hidden="true"></span>
+				<div class="stat-meta">
+					<span class="stat-index">01</span>
+					<span class="stat-label">发布版本</span>
+					<span class="stat-sub">RELEASES SHIPPED</span>
+				</div>
+				<div class="stat-figure">
+					<span class="stat-value" data-value="35">35</span>
+				</div>
+			</li>
+			<li class="stat-row">
+				<span class="stat-rule" aria-hidden="true"></span>
+				<div class="stat-meta">
+					<span class="stat-index">02</span>
+					<span class="stat-label">兼容的 Minecraft 版本</span>
+					<span class="stat-sub">MINECRAFT VERSIONS</span>
+				</div>
+				<div class="stat-figure">
+					<span class="stat-value" data-value="11">11</span>
+				</div>
+			</li>
+			<li class="stat-row">
+				<span class="stat-rule" aria-hidden="true"></span>
+				<div class="stat-meta">
+					<span class="stat-index">03</span>
+					<span class="stat-label">加载器支持</span>
+					<span class="stat-sub">MOD LOADERS</span>
+				</div>
+				<div class="stat-figure">
+					<span class="stat-value" data-value="3">3</span>
+				</div>
+			</li>
+		</ul>
+
+		<!-- 终章：零 -->
+		<div class="stat-zero">
+			<p class="zero-eyebrow"><span class="zero-index">04</span> RUNTIME DEPENDENCIES</p>
+			<div class="zero-mask">
+				<span class="zero-glyph" aria-hidden="true">0</span>
+			</div>
+			<div class="zero-caption">
+				<p class="zero-label">第三方运行时依赖</p>
+				<p class="zero-statement">不是削减到零——<br class="zero-br" />是从未需要过。</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<style>
+	/* 颜色全部由 currentColor 派生；背景交给页面统一渐变，本区块透明 */
+	.stats {
+		--moss: #86c15c;
+		--hairline: color-mix(in srgb, currentColor 14%, transparent);
+		--muted: color-mix(in srgb, currentColor 58%, transparent);
+		--faint: color-mix(in srgb, currentColor 36%, transparent);
+		--font-cjk:
+			'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC',
+			'Microsoft YaHei', sans-serif;
+		--font-mono: 'Cascadia Mono', 'SF Mono', Consolas, ui-monospace, monospace;
+
+		font-family: var(--font-cjk);
+		padding: clamp(10rem, 24vh, 20rem) 6vw clamp(8rem, 20vh, 16rem);
+	}
+
+	.stats-inner {
+		max-width: 1400px;
+		margin-inline: auto;
+	}
+
+	/* ---------- 区块题眉 ---------- */
+	.stats-head {
+		margin-bottom: clamp(4rem, 10vh, 8rem);
+	}
+
+	.stats-eyebrow {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		letter-spacing: 0.35em;
+		text-transform: uppercase;
+		color: var(--faint);
+	}
+
+	.stats-eyebrow .tick {
+		margin-right: 0.6em;
+	}
+
+	/* ---------- 账本三行 ---------- */
+	.ledger {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.stat-row {
+		position: relative;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: end;
+		gap: clamp(2rem, 5vw, 6rem);
+		padding-block: clamp(3.5rem, 9vh, 7rem);
+	}
+
+	.stat-rule {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 1px;
+		background: var(--hairline);
+	}
+
+	.stat-meta {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		padding-bottom: clamp(0.4rem, 1.2vh, 1rem); /* 与巨字基线呼吸对齐 */
+	}
+
+	.stat-index {
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		letter-spacing: 0.3em;
+		color: var(--faint);
+	}
+
+	.stat-index::before {
+		content: '/ ';
+	}
+
+	.stat-label {
+		font-weight: 700;
+		font-size: clamp(1.25rem, 2.2vw, 2rem);
+		line-height: 1.4;
+	}
+
+	.stat-sub {
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.28em;
+		color: var(--faint);
+	}
+
+	/* 巨型数字：区块的主角 */
+	.stat-figure {
+		overflow: hidden; /* 数字从遮罩里升起 */
+		text-align: right;
+	}
+
+	.stat-value {
+		display: block;
+		font-weight: 900;
+		font-size: clamp(7rem, 15vw, 15rem);
+		line-height: 0.92;
+		letter-spacing: -0.02em;
+		font-variant-numeric: tabular-nums;
+		will-change: transform;
+	}
+
+	/* ---------- 终章：零 ---------- */
+	.stat-zero {
+		position: relative;
+		min-height: 100vh;
+		margin-top: clamp(3rem, 8vh, 6rem);
+		padding-top: clamp(3.5rem, 9vh, 7rem);
+		border-top: 1px solid var(--hairline);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+	}
+
+	.zero-eyebrow {
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		letter-spacing: 0.35em;
+		text-transform: uppercase;
+		color: var(--faint);
+		margin-bottom: clamp(2rem, 5vh, 4rem);
+	}
+
+	.zero-index::before {
+		content: '/ ';
+	}
+
+	.zero-index::after {
+		content: ' · ';
+	}
+
+	.zero-mask {
+		overflow: hidden;
+		line-height: 0.78;
+	}
+
+	.zero-glyph {
+		display: block;
+		font-weight: 900;
+		font-size: clamp(16rem, 42vw, 42rem);
+		line-height: 0.78;
+		letter-spacing: -0.03em;
+		color: var(--moss); /* 全区块唯一的强调色时刻 */
+		font-variant-numeric: tabular-nums;
+		user-select: none;
+		will-change: transform;
+	}
+
+	.zero-caption {
+		margin-top: clamp(2.5rem, 6vh, 5rem);
+	}
+
+	.zero-label {
+		font-weight: 700;
+		font-size: clamp(1.25rem, 2.2vw, 2rem);
+		line-height: 1.4;
+		color: var(--muted);
+	}
+
+	.zero-statement {
+		margin-top: clamp(1.2rem, 3vh, 2.2rem);
+		font-weight: 900;
+		font-size: clamp(1.9rem, 4.4vw, 4rem);
+		line-height: 1.35;
+		letter-spacing: 0.01em;
+	}
+
+	.zero-br {
+		display: none;
+	}
+
+	/* ---------- 响应式 ---------- */
+	@media (max-width: 768px) {
+		.stat-row {
+			grid-template-columns: 1fr;
+			align-items: start;
+			gap: 1.6rem;
+		}
+
+		.stat-figure {
+			text-align: left;
+		}
+
+		.stat-value {
+			font-size: clamp(6rem, 26vw, 9rem);
+		}
+
+		.zero-glyph {
+			font-size: clamp(11rem, 56vw, 18rem);
+		}
+
+		.zero-br {
+			display: inline;
+		}
+	}
+</style>
+
+<script>
+	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+	if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		gsap.registerPlugin(ScrollTrigger);
+
+		const section = document.getElementById('stats');
+		if (section) {
+			// —— 账本三行：发丝线划开 → 标签落座 → 巨字从遮罩升起并随滚动涨到终值 ——
+			section.querySelectorAll<HTMLElement>('.stat-row').forEach((row) => {
+				const value = row.querySelector<HTMLElement>('.stat-value');
+				const end = Number(value?.dataset.value ?? 0);
+				const tl = gsap.timeline({
+					scrollTrigger: {
+						trigger: row,
+						start: 'top 85%',
+						end: 'top 38%',
+						scrub: 0.5,
+					},
+				});
+
+				tl.from(
+					row.querySelector('.stat-rule'),
+					{ scaleX: 0, transformOrigin: 'left center', ease: 'none' },
+					0
+				)
+					.from(
+						row.querySelectorAll('.stat-meta > *'),
+						{ y: 26, autoAlpha: 0, stagger: 0.12, ease: 'power1.out' },
+						0.05
+					)
+					.from(value, { yPercent: 62, autoAlpha: 0, ease: 'power1.out' }, 0.1);
+
+				// 数值与滚动进度直接挂钩：一边滚一边涨，回滚则倒数
+				if (value) {
+					gsap.fromTo(
+						value,
+						{ innerText: 0 },
+						{
+							innerText: end,
+							snap: { innerText: 1 },
+							ease: 'none',
+							scrollTrigger: {
+								trigger: row,
+								start: 'top 85%',
+								end: 'top 30%',
+								scrub: 0.4,
+							},
+						}
+					);
+				}
+			});
+
+			// —— 终章：零。别的数字都在涨，它纹丝不动——从遮罩里缓缓压场落定 ——
+			const zeroTl = gsap.timeline({
+				scrollTrigger: {
+					trigger: section.querySelector('.stat-zero'),
+					start: 'top 78%',
+					end: 'center 42%',
+					scrub: 0.6,
+				},
+			});
+
+			zeroTl
+				.from(section.querySelector('.zero-eyebrow'), { y: 22, autoAlpha: 0, ease: 'power1.out' }, 0)
+				.from(
+					section.querySelector('.zero-glyph'),
+					{ yPercent: 108, ease: 'power2.out' },
+					0.08
+				)
+				.from(section.querySelector('.zero-glyph'), { scale: 1.08, ease: 'power1.out' }, 0.3)
+				.from(
+					section.querySelectorAll('.zero-caption > *'),
+					{ y: 34, autoAlpha: 0, stagger: 0.18, ease: 'power1.out' },
+					0.55
+				);
+
+			// 落定之后：零在剩余滚程里极缓上浮，制造纵深（视差）
+			gsap.to(section.querySelector('.zero-mask'), {
+				yPercent: -8,
+				ease: 'none',
+				scrollTrigger: {
+					trigger: section.querySelector('.stat-zero'),
+					start: 'center center',
+					end: 'bottom top',
+					scrub: true,
+				},
+			});
+		}
+	}
+</script>

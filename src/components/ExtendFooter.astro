@@ -1,0 +1,320 @@
+---
+// 扩展区 + 页脚 —— 自包含组件（模板 / 样式 / 动效）
+// 样式全部由 currentColor 派生（页脚除外，自带深色底）。
+// 首页不做仓库介绍/索引——四个仓库的展示留给未来的 addons 页面。
+---
+
+<!-- ============ 扩展 ============ -->
+<section class="extend" id="extend">
+	<header class="extend-head">
+		<p class="x-eyebrow">扩展</p>
+		<h2 class="x-title">
+			<span class="x-title-mask"><span class="x-title-line">给它添上你的能力。</span></span>
+		</h2>
+	</header>
+
+	<div class="paths">
+		<article class="path">
+			<span class="path-rule" aria-hidden="true"></span>
+			<div class="path-head">
+				<h3 class="path-name">写一个 Skill</h3>
+				<span class="path-no" aria-hidden="true">01</span>
+			</div>
+			<p class="path-desc">一个 Markdown 文件就是一条工作流。零代码，任何人都能教它新本事。</p>
+		</article>
+
+		<article class="path">
+			<span class="path-rule" aria-hidden="true"></span>
+			<div class="path-head">
+				<h3 class="path-name">接一个 MCP</h3>
+				<span class="path-no" aria-hidden="true">02</span>
+			</div>
+			<p class="path-desc">把模组的内部世界结构化地接进它的感官。让每个模组、每种玩法都拥有自己的智能。</p>
+		</article>
+	</div>
+
+	<aside class="coming">
+		<span class="coming-rule" aria-hidden="true"></span>
+		<p class="coming-text">
+			<span class="coming-tag">即将上线：</span>GitHub 登录，提交你的 Skill 与
+			MCP。本站只做索引——链接指向你的 GitHub 或 CurseForge，作品永远属于你。
+		</p>
+	</aside>
+</section>
+
+<!-- ============ 页脚 ============ -->
+<footer class="footer">
+	<div class="footer-inner">
+		<div class="footer-meta">
+			<span class="meta-rule" aria-hidden="true"></span>
+			<p class="footer-license">引擎 LGPL-3.0 · 公开 API MIT</p>
+			<p class="footer-disclaimer">
+				NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.
+			</p>
+		</div>
+	</div>
+
+	<p class="footer-mark" aria-label="NUMEN">
+		{'NUMEN'.split('').map((ch) => (
+			<span class="mark-letter" aria-hidden="true"><span class="mark-glyph">{ch}</span></span>
+		))}
+	</p>
+</footer>
+
+<style>
+	.extend,
+	.footer {
+		--x-hairline: color-mix(in srgb, currentColor 14%, transparent);
+		--x-muted: color-mix(in srgb, currentColor 58%, transparent);
+		--x-faint: color-mix(in srgb, currentColor 36%, transparent);
+		--x-moss: #86c15c;
+		--x-cjk:
+			'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC',
+			'Microsoft YaHei', sans-serif;
+		--x-mono: 'Cascadia Mono', 'SF Mono', Consolas, ui-monospace, monospace;
+		font-family: var(--x-cjk);
+	}
+
+	/* ---------- 扩展 ---------- */
+	.extend {
+		padding: clamp(9rem, 24vh, 18rem) 6vw;
+		max-width: 1400px;
+		margin-inline: auto;
+	}
+
+	.x-eyebrow {
+		font-family: var(--x-mono);
+		font-size: 0.8rem;
+		letter-spacing: 0.35em;
+		color: var(--x-faint);
+		margin: 0 0 clamp(2.5rem, 6vh, 4.5rem);
+	}
+
+	.x-title {
+		font-weight: 900;
+		font-size: clamp(2.2rem, 5vw, 4.4rem);
+		line-height: 1.25;
+		margin: 0 0 clamp(4.5rem, 10vh, 8rem);
+	}
+
+	.x-title-mask {
+		display: block;
+		overflow: hidden;
+	}
+
+	.x-title-line {
+		display: block;
+	}
+
+	.paths {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: clamp(2.5rem, 5vw, 6rem);
+	}
+
+	.path-rule,
+	.coming-rule,
+	.meta-rule {
+		display: block;
+		height: 1px;
+		width: 100%;
+		background-color: var(--x-hairline);
+	}
+
+	.path-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 1rem;
+		padding-top: clamp(1.5rem, 3vh, 2.2rem);
+	}
+
+	.path-name {
+		font-weight: 700;
+		font-size: clamp(1.4rem, 2.4vw, 2.1rem);
+		margin: 0;
+	}
+
+	.path-no {
+		font-family: var(--x-mono);
+		font-size: clamp(0.85rem, 1vw, 1rem);
+		color: var(--x-faint);
+	}
+
+	.path-desc {
+		margin: 1.2rem 0 0;
+		max-width: 36em;
+		font-size: clamp(1rem, 1.4vw, 1.2rem);
+		line-height: 2;
+		color: var(--x-muted);
+	}
+
+	.coming {
+		margin-top: clamp(4.5rem, 10vh, 7rem);
+	}
+
+	.coming-text {
+		margin: 0;
+		padding-top: clamp(1.5rem, 3vh, 2.2rem);
+		max-width: 44em;
+		font-size: clamp(1rem, 1.4vw, 1.2rem);
+		line-height: 2;
+		color: var(--x-muted);
+	}
+
+	.coming-tag {
+		color: var(--x-moss);
+		font-weight: 700;
+	}
+
+	/* ---------- 页脚 ---------- */
+	.footer {
+		/* 页脚自带深色：作为实体块随滚动推入，颜色边界与元素边界重合，
+		   避免"整页环境色突变"的惊吓感 */
+		background-color: #0e0c0a;
+		color: #fef9ed;
+		padding-top: clamp(7rem, 18vh, 13rem);
+		overflow: hidden;
+	}
+
+	.footer-inner {
+		max-width: 1400px;
+		margin-inline: auto;
+		padding-inline: 6vw;
+	}
+
+	.footer-meta {
+		margin-top: 0;
+	}
+
+	.footer-license {
+		margin: 0;
+		padding-top: 1.1rem;
+		font-size: 0.85rem;
+		color: var(--x-muted);
+	}
+
+	.footer-disclaimer {
+		margin: 0.7rem 0 0;
+		font-family: var(--x-mono);
+		font-size: 0.66rem;
+		letter-spacing: 0.08em;
+		color: var(--x-faint);
+	}
+
+	/* ---------- 压轴字标：全出血，贴住页面底边 ---------- */
+	.footer-mark {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-end;
+		width: 100%;
+		padding-inline: 1.5vw;
+		margin: clamp(3.5rem, 9vh, 6.5rem) 0 0;
+		font-weight: 900;
+		font-size: clamp(3.4rem, 17.5vw, 21rem);
+		line-height: 0.82;
+		user-select: none;
+	}
+
+	.mark-letter {
+		display: block;
+		overflow: hidden;
+	}
+
+	.mark-glyph {
+		display: block;
+		transform: translateZ(0);
+	}
+
+	/* ---------- 响应式 ---------- */
+	@media (max-width: 900px) {
+		.paths {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
+
+<script>
+	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+	if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		gsap.registerPlugin(ScrollTrigger);
+
+		// —— 扩展：眉题淡入，标题从遮罩里升起 ——
+		gsap.from('.extend .x-eyebrow', {
+			autoAlpha: 0,
+			y: 18,
+			duration: 0.7,
+			ease: 'power2.out',
+			scrollTrigger: { trigger: '.extend', start: 'top 78%' },
+		});
+		gsap.from('.extend .x-title-line', {
+			yPercent: 112,
+			duration: 0.9,
+			ease: 'power3.out',
+			scrollTrigger: { trigger: '.extend', start: 'top 74%' },
+		});
+
+		// —— 两条路径：发丝线先划开，内容再依次浮起 ——
+		gsap.utils.toArray<HTMLElement>('.extend .path').forEach((path, i) => {
+			const tl = gsap.timeline({
+				scrollTrigger: { trigger: path, start: 'top 84%' },
+				delay: i * 0.15,
+			});
+			tl.from(path.querySelector('.path-rule'), {
+				scaleX: 0,
+				transformOrigin: 'left center',
+				duration: 0.8,
+				ease: 'power2.inOut',
+			}).from(
+				path.querySelectorAll('.path-head, .path-desc'),
+				{ y: 26, autoAlpha: 0, duration: 0.7, stagger: 0.1, ease: 'power2.out' },
+				0.2
+			);
+		});
+
+		// —— 预告：同一套划线 + 浮起语法 ——
+		const comingTl = gsap.timeline({
+			scrollTrigger: { trigger: '.extend .coming', start: 'top 86%' },
+		});
+		comingTl
+			.from('.extend .coming-rule', {
+				scaleX: 0,
+				transformOrigin: 'left center',
+				duration: 0.8,
+				ease: 'power2.inOut',
+			})
+			.from('.extend .coming-text', { y: 24, autoAlpha: 0, duration: 0.7, ease: 'power2.out' }, 0.2);
+
+		// —— 页脚：许可行划线 + 浮起 ——
+		const footTl = gsap.timeline({
+			scrollTrigger: { trigger: '.footer-meta', start: 'top 88%' },
+		});
+		footTl
+			.from('.footer-meta .meta-rule', {
+				scaleX: 0,
+				transformOrigin: 'left center',
+				duration: 0.7,
+				ease: 'power2.inOut',
+			})
+			.from(
+				'.footer-license, .footer-disclaimer',
+				{ y: 16, autoAlpha: 0, duration: 0.6, stagger: 0.1, ease: 'power2.out' },
+				0.2
+			);
+
+		// —— 压轴字标：与滚动条直接挂钩，五个字母从底边逐个升起 ——
+		gsap.from('.footer-mark .mark-glyph', {
+			yPercent: 110,
+			ease: 'none',
+			stagger: 0.12,
+			scrollTrigger: {
+				trigger: '.footer-mark',
+				start: 'top bottom',
+				end: 'bottom bottom',
+				scrub: 0.4,
+			},
+		});
+	}
+</script>

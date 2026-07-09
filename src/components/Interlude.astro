@@ -1,0 +1,197 @@
+---
+// Interlude — 实录过场
+// 演示与数字之间的一次呼吸：开窗式显影。
+// 进场时画面只是黑幕中央一条 30vh 的横向条幅（一道取景缝），
+// 钉住后随滚动向上下扩张到全出血；内层实录反向缩放（1.45 → 1），
+// 像镜头从特写缓缓拉开——外框在开、里面的世界在退，双向对拉出纵深。
+// 全开之后蒙版显影，caption 才从遮罩里逐字升起。
+import { Image } from 'astro:assets';
+import scene from '../assets/island-landscape.png';
+---
+
+<section class="interlude" aria-label="游戏实录">
+	<div class="scene">
+		<Image src={scene} alt="Minecraft 海岛全景实录画面" class="scene-img" widths={[1280, 1920, 2560]} sizes="100vw" loading="lazy" />
+	</div>
+	<span class="frame-edge edge-top" aria-hidden="true"></span>
+	<span class="frame-edge edge-bottom" aria-hidden="true"></span>
+	<div class="scrim" aria-hidden="true"></div>
+	<p class="caption">
+		<span class="mask"><span class="caption-eyebrow">实录 · 主世界</span></span>
+		<span class="caption-line" aria-label="它已经住进了这个世界。">
+			<span class="line-mask" aria-hidden="true"><span class="ch">它</span><span class="ch">已</span><span class="ch">经</span><span class="ch">住</span><span class="ch">进</span><span class="ch">了</span><span class="ch">这</span><span class="ch">个</span><span class="ch">世</span><span class="ch">界</span><span class="ch">。</span></span>
+		</span>
+	</p>
+</section>
+
+<style>
+	.interlude {
+		--void: #0e0c0a;
+		--cream: #fef9ed;
+		--font-cjk:
+			'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC',
+			'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+		--font-mono: 'Cascadia Mono', 'SF Mono', Consolas, ui-monospace, monospace;
+
+		position: relative;
+		height: 100vh;
+		overflow: hidden;
+		background-color: var(--void); /* 与前区 demo 同底，条幅阶段四周是纯黑幕布 */
+		font-family: var(--font-cjk);
+	}
+
+	/* 取景窗：全尺寸容器，开窗由脚本用 clip-path 驱动（唯一特例）。
+	   无脚本 / reduce 时不带任何裁切——静态即全出血完整画面 */
+	.scene {
+		position: absolute;
+		inset: 0;
+		will-change: clip-path;
+	}
+
+	.scene :global(.scene-img) {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		will-change: transform;
+	}
+
+	/* 条幅上下沿的发丝线：跟着窗口边缘走，全开时熄灭。
+	   默认不可见——只属于动效，静态版不需要它 */
+	.frame-edge {
+		position: absolute;
+		left: 0;
+		right: 0;
+		height: 1px;
+		background-color: var(--cream);
+		opacity: 0;
+		pointer-events: none;
+		will-change: transform, opacity;
+	}
+
+	.edge-top {
+		top: 0;
+	}
+
+	.edge-bottom {
+		bottom: 0;
+	}
+
+	/* 蒙版：底部加重的斜向渐变，保住左下 caption 的对比度。
+	   静态版常显；动效版在全开后才显影 */
+	.scrim {
+		position: absolute;
+		inset: 0;
+		background:
+			linear-gradient(to top, rgba(14, 12, 10, 0.62) 0%, rgba(14, 12, 10, 0.18) 38%, rgba(14, 12, 10, 0) 62%),
+			rgba(14, 12, 10, 0.18);
+		will-change: opacity;
+	}
+
+	.caption {
+		position: absolute;
+		left: 6vw;
+		bottom: 8vh;
+		z-index: 1;
+		color: var(--cream);
+		margin: 0;
+	}
+
+	/* 遮罩：文字从各自的窗口里升起，而不是整块淡入 */
+	.mask,
+	.line-mask {
+		display: block;
+		overflow: hidden;
+	}
+
+	.caption-eyebrow {
+		display: block;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.35em;
+		text-transform: uppercase;
+		opacity: 0.7;
+		will-change: transform;
+	}
+
+	.mask {
+		margin-bottom: 1.1rem;
+	}
+
+	.caption-line {
+		display: block;
+		font-weight: 900;
+		font-size: clamp(1.7rem, 3.6vw, 3.2rem);
+		line-height: 1.3;
+	}
+
+	.caption-line .ch {
+		display: inline-block;
+		will-change: transform;
+	}
+</style>
+
+<script>
+	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+	if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		gsap.registerPlugin(ScrollTrigger);
+
+		const section = document.querySelector('.interlude');
+		if (section) {
+			const q = gsap.utils.selector(section as HTMLElement);
+
+			// 进入视口时条幅与边线已就位（fromTo 立即渲染），钉住前就能看见那道缝
+			gsap.set(q('.frame-edge'), { autoAlpha: 0.55 });
+
+			// 一次呼吸 = 一条被钉住的 scrub 时间轴：
+			// 0 → 6   开窗。clip 从 30vh 条幅扩到全出血，内层图 1.45 → 1 反向回退，
+			//         上下发丝线贴着窗沿走，抵边后熄灭——镜头拉开，世界变大
+			// 4.8 → 6.4 蒙版显影，为文字铺底
+			// 6.1 → 9.3 caption 编排：眉题先从遮罩升起，正句十一个字逐字跟上
+			// 9.3 → 10.4 留一拍空滚动，让画面在解钉前站稳
+			const tl = gsap.timeline({
+				defaults: { ease: 'none' },
+				scrollTrigger: {
+					trigger: section,
+					start: 'top top',
+					end: '+=160%',
+					pin: true,
+					scrub: 0.5,
+					anticipatePin: 1,
+				},
+			});
+
+			tl.fromTo(
+				q('.scene'),
+				{ clipPath: 'inset(35% 0% 35% 0%)' },
+				{ clipPath: 'inset(0% 0% 0% 0%)', duration: 6, ease: 'power1.inOut' },
+				0
+			)
+				.fromTo(q('.edge-top'), { y: '35vh' }, { y: '0vh', duration: 6, ease: 'power1.inOut' }, 0)
+				.fromTo(q('.edge-bottom'), { y: '-35vh' }, { y: '0vh', duration: 6, ease: 'power1.inOut' }, 0)
+				.to(q('.frame-edge'), { autoAlpha: 0, duration: 0.9 }, 5.1);
+
+			// 反向缩放贯穿全程：开窗期退得快，全开后仍在极缓落定——镜头一直是活的
+			tl.fromTo(q('.scene-img'), { scale: 1.45 }, { scale: 1, duration: 10, ease: 'power1.out' }, 0);
+
+			tl.fromTo(q('.scrim'), { autoAlpha: 0 }, { autoAlpha: 1, duration: 1.6 }, 4.8);
+
+			tl.fromTo(
+				q('.caption-eyebrow'),
+				{ yPercent: 120 },
+				{ yPercent: 0, duration: 1.2, ease: 'power3.out' },
+				6.1
+			).fromTo(
+				q('.caption-line .ch'),
+				{ yPercent: 115 },
+				{ yPercent: 0, duration: 1.3, ease: 'power3.out', stagger: 0.12 },
+				6.8
+			);
+
+			tl.to({}, { duration: 1.1 }, 9.3);
+		}
+	}
+</script>
