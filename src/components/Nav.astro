@@ -1,25 +1,34 @@
 ---
-// 全站顶栏 —— 固定、极简、一行。
-// mix-blend-mode: difference 让文字在黑底 / 米白底 / 实录图上自动反色，
-// 无需任何滚动监听或分区换色逻辑。
+// 全站顶栏 —— 粗新野主义实体顶栏：米白底 + 3px 墨黑底边线。
+// NUMEN 字标是一枚微旋转的草绿贴纸块；当前页用色块高亮；
+// GitHub 是带硬阴影 + 按压反馈的小实体按钮。无任何混合模式魔法。
+import { Image } from 'astro:assets';
+import logo from '../assets/numen-logo.png';
+
 const { current = 'home' } = Astro.props as {
 	current?: 'home' | 'addons' | 'docs' | 'about';
 };
 ---
 
 <header class="site-nav">
-	<a class="nav-mark" href="/">NUMEN</a>
+	<a class="nav-mark" href="/" aria-label="Numen 首页">
+		<Image class="nav-logo" src={logo} alt="Numen" widths={[48, 96]} sizes="34px" />
+		<span class="nav-word">NUMEN</span>
+	</a>
 	<nav class="nav-links" aria-label="站点导航">
 		<a href="/" class:list={['nav-link', current === 'home' && 'is-current']}>首页</a>
-		<a href="/addons" class:list={['nav-link', current === 'addons' && 'is-current']}>Addons</a>
+		<a href="/addons" class:list={['nav-link', current === 'addons' && 'is-current']}>能力</a>
 		<a href="/docs" class:list={['nav-link', current === 'docs' && 'is-current']}>文档</a>
 		<a href="/about" class:list={['nav-link', current === 'about' && 'is-current']}>关于</a>
-		<a href="https://github.com/Dwinovo/minecraft-numen" target="_blank" rel="noopener" class="nav-link">GitHub ↗</a>
+		<a href="https://github.com/Dwinovo/minecraft-numen" target="_blank" rel="noopener" class="nav-btn">GitHub ↗</a>
 	</nav>
 </header>
 
 <style>
 	.site-nav {
+		--ink: #171310;
+		--cream: #fef9ed;
+		--grass: #86c15c;
 		position: fixed;
 		inset-inline: 0;
 		top: 0;
@@ -27,9 +36,11 @@ const { current = 'home' } = Astro.props as {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: clamp(1.1rem, 2.5vh, 1.7rem) 5vw;
-		mix-blend-mode: difference;
-		color: #fef9ed;
+		gap: 1rem;
+		padding: clamp(0.8rem, 2vh, 1.1rem) 5vw;
+		background-color: var(--cream);
+		border-bottom: 3px solid var(--ink);
+		color: var(--ink);
 		font-family: 'Cascadia Mono', 'SF Mono', Consolas, ui-monospace, monospace;
 		animation: nav-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
 		animation-delay: 0.2s;
@@ -46,43 +57,130 @@ const { current = 'home' } = Astro.props as {
 		}
 	}
 
+	/* NUMEN 字标 —— logo 贴纸块（微旋转） + 墨黑字标 */
 	.nav-mark {
-		font-weight: 900;
-		font-size: 0.95rem;
-		letter-spacing: 0.32em;
-		color: inherit;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6em;
 		text-decoration: none;
+	}
+
+	/* logo 小相框 —— 保留贴纸质感与按压反馈 */
+	.nav-logo {
+		width: 34px;
+		height: 34px;
+		object-fit: cover;
+		display: block;
+		border: 3px solid var(--ink);
+		border-radius: 9px;
+		box-shadow: 4px 4px 0 var(--ink);
+		transform: rotate(-3deg);
+		transition: transform 0.15s ease, box-shadow 0.15s ease;
+	}
+
+	.nav-mark:hover .nav-logo,
+	.nav-mark:focus-visible .nav-logo {
+		transform: rotate(-3deg) translate(-2px, -2px);
+		box-shadow: 6px 6px 0 var(--ink);
+	}
+
+	.nav-mark:active .nav-logo {
+		transform: rotate(-3deg) translate(2px, 2px);
+		box-shadow: 2px 2px 0 var(--ink);
+	}
+
+	.nav-word {
+		font-weight: 900;
+		font-size: 0.9rem;
+		letter-spacing: 0.28em;
+		color: var(--ink);
 	}
 
 	.nav-links {
 		display: flex;
-		gap: clamp(1.4rem, 3vw, 2.6rem);
+		align-items: center;
+		gap: clamp(1rem, 2.5vw, 2.2rem);
 		font-size: 0.78rem;
 		letter-spacing: 0.18em;
 	}
 
 	.nav-link {
-		color: inherit;
+		color: var(--ink);
 		text-decoration: none;
-		opacity: 0.55;
-		transition: opacity 0.2s ease;
+		font-weight: 700;
+		padding: 0.2em 0.35em;
+		border-bottom: 3px solid transparent;
+		transition: border-color 0.15s ease;
 	}
 
 	.nav-link:hover,
 	.nav-link:focus-visible {
-		opacity: 1;
+		border-bottom-color: var(--ink);
 	}
 
+	/* 当前页 —— 草绿色块高亮 */
 	.is-current {
-		opacity: 1;
-		text-decoration: underline;
-		text-underline-offset: 6px;
-		text-decoration-thickness: 1px;
+		background-color: var(--grass);
+		border: 2px solid var(--ink);
+		border-radius: 6px;
+		padding: 0.2em 0.55em;
+	}
+
+	.is-current:hover,
+	.is-current:focus-visible {
+		border-bottom-color: var(--ink);
+	}
+
+	/* GitHub —— 小实体按钮：硬阴影 + 按压反馈 */
+	.nav-btn {
+		color: var(--cream);
+		background-color: var(--ink);
+		text-decoration: none;
+		font-weight: 700;
+		border: 3px solid var(--ink);
+		border-radius: 10px;
+		box-shadow: 5px 5px 0 var(--ink);
+		padding: 0.32em 0.7em;
+		transition: transform 0.15s ease, box-shadow 0.15s ease;
+	}
+
+	.nav-btn:hover,
+	.nav-btn:focus-visible {
+		transform: translate(-2px, -2px);
+		box-shadow: 7px 7px 0 var(--ink);
+	}
+
+	.nav-btn:active {
+		transform: translate(2px, 2px);
+		box-shadow: 2px 2px 0 var(--ink);
+	}
+
+	@media (max-width: 640px) {
+		.nav-links {
+			font-size: 0.7rem;
+			letter-spacing: 0.1em;
+			gap: 0.7rem;
+		}
+
+		.nav-logo {
+			width: 30px;
+			height: 30px;
+		}
+
+		.nav-word {
+			font-size: 0.8rem;
+			letter-spacing: 0.2em;
+		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
 		.site-nav {
 			animation: none;
+		}
+
+		.nav-logo,
+		.nav-btn {
+			transition: none;
 		}
 	}
 </style>

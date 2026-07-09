@@ -1,6 +1,7 @@
 ---
-// 页脚 —— 自带深色底的实体块（避免整页环境色突变），
-// 内容三层：许可行 → 免责声明 → 全出血 NUMEN 巨型字标压轴。
+// 页脚 —— 与全站同一张米白纸面收尾：顶部一道 4px ink 粗边线立住底部，
+// 内容三层：许可行 → 免责声明 → 全出血 NUMEN 巨型描边字标压轴
+// （米白芯 + ink 粗描边，中央的 M 灌一记草绿——一处两彩以内）。
 // 首页不做仓库介绍/链接——生态展示在 /addons。
 ---
 
@@ -24,16 +25,19 @@
 
 <style>
 	.footer {
-		--x-hairline: color-mix(in srgb, currentColor 14%, transparent);
-		--x-muted: color-mix(in srgb, currentColor 58%, transparent);
-		--x-faint: color-mix(in srgb, currentColor 36%, transparent);
+		--ink: #171310;
+		--cream: #fef9ed;
+		--moss: #86c15c;
+		--x-muted: color-mix(in srgb, currentColor 62%, transparent);
+		--x-faint: color-mix(in srgb, currentColor 45%, transparent);
 		--x-mono: 'Cascadia Mono', 'SF Mono', Consolas, ui-monospace, monospace;
 		--x-cjk:
 			'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC',
 			'Microsoft YaHei', sans-serif;
 
-		background-color: #0e0c0a;
-		color: #fef9ed;
+		background-color: var(--cream);
+		color: var(--ink);
+		border-top: 4px solid var(--ink);
 		padding-top: clamp(7rem, 18vh, 13rem);
 		overflow: hidden;
 		font-family: var(--x-cjk);
@@ -45,17 +49,19 @@
 		padding-inline: 6vw;
 	}
 
+	/* 许可行上的分隔线：3px ink 实线（划线动画照旧从左画开） */
 	.meta-rule {
 		display: block;
-		height: 1px;
+		height: 3px;
 		width: 100%;
-		background-color: var(--x-hairline);
+		background-color: var(--ink);
 	}
 
 	.footer-license {
 		margin: 0;
-		padding-top: 1.1rem;
+		padding-top: 1.2rem;
 		font-size: 0.85rem;
+		font-weight: 700;
 		color: var(--x-muted);
 	}
 
@@ -67,7 +73,7 @@
 		color: var(--x-faint);
 	}
 
-	/* ---------- 压轴字标：全出血，贴住页面底边 ---------- */
+	/* ---------- 压轴字标：全出血，贴住页面底边，逐字升起（scrub 挂钩不动） ---------- */
 	.footer-mark {
 		display: flex;
 		justify-content: space-between;
@@ -84,11 +90,26 @@
 	.mark-letter {
 		display: block;
 		overflow: hidden;
+		padding-inline: 0.03em; /* 给描边留出遮罩内的呼吸，升起时不削边 */
 	}
 
+	/* 兜底：不支持描边时是实心 ink 巨字 */
 	.mark-glyph {
 		display: block;
+		color: var(--ink);
 		transform: translateZ(0);
+	}
+
+	/* 描边字：米白芯 + ink 粗描边；中央的 M 灌草绿——米白之外只此一彩 */
+	@supports (-webkit-text-stroke: 2px #171310) {
+		.mark-glyph {
+			color: var(--cream);
+			-webkit-text-stroke: clamp(2px, 0.42vw, 7px) var(--ink);
+		}
+
+		.mark-letter:nth-child(3) .mark-glyph {
+			color: var(--moss);
+		}
 	}
 </style>
 

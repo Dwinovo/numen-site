@@ -1,6 +1,6 @@
 ---
-// 子页面共享布局 —— 安静的工具页：米白底、墨黑字、无滚动动效。
-// 首页负责表演，子页负责把信息交代清楚。
+// 子页面共享布局 —— 粗新野主义工具页：米白底、墨黑字、实线粗边、无滚动动效。
+// 首页负责表演，子页负责把信息交代清楚（活泼，但层级依然清晰）。
 import '../styles/global.css';
 import Nav from '../components/Nav.astro';
 
@@ -34,6 +34,13 @@ const { title, description, current } = Astro.props as {
 
 <style is:global>
 	.subpage {
+		/* Numen 粗新野主义 v1 设计令牌 */
+		--ink: #171310;
+		--cream: #fef9ed;
+		--grass: #86c15c;
+		--orange: #f5a623;
+		--lake: #5bb8e8;
+		--sakura: #f39fc5;
 		--moss: #86c15c;
 		--hairline: color-mix(in srgb, currentColor 14%, transparent);
 		--muted: color-mix(in srgb, currentColor 58%, transparent);
@@ -81,7 +88,9 @@ const { title, description, current } = Astro.props as {
 	}
 
 	.subpage-foot {
-		padding: clamp(4rem, 9vh, 6rem) 6vw clamp(2rem, 4vh, 3rem);
+		margin-top: clamp(4rem, 9vh, 6rem);
+		border-top: 3px solid var(--ink);
+		padding: clamp(2rem, 4vh, 3rem) 6vw;
 		text-align: center;
 	}
 
@@ -90,6 +99,7 @@ const { title, description, current } = Astro.props as {
 		font-family: var(--font-mono);
 		font-size: 0.66rem;
 		letter-spacing: 0.08em;
-		color: var(--faint);
+		font-weight: 700;
+		color: var(--ink);
 	}
 </style>

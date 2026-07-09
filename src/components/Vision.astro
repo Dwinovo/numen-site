@@ -14,10 +14,11 @@
 //   节点由 faint 点亮为 moss。路径由 JS 读取节点真实位置动态生成
 //   （Catmull-Rom → 贝塞尔），resize 与 ScrollTrigger refresh 后重算。
 //
-//   每章在文字对侧的留白区衬一张灰调低透明度的章景底纹
-//   （Mojang 官方壁纸，全彩直接展示），随滚动缓慢反向漂移。
+//   每章在文字对侧的留白区立一张粗边框相框图（Mojang 官方壁纸，
+//   全彩直接展示，±1° 微旋转像贴在纸上的照片），随滚动缓慢反向漂移。
 //
-// 本区块不设背景色；装饰色全部由 currentColor 派生（进入时为墨黑）。
+// 本区块自带米白底（全站统一 #fef9ed），墨黑 #171310 只用于文字/边框/硬阴影；
+// 装饰色由 currentColor（= ink）派生。
 // 动效只动 transform / opacity（stroke-dashoffset 为特许特例）；
 // prefers-reduced-motion 时静态呈现完整充能状态（全 moss 曲线 + 全亮节点）；
 // 无 JS 时曲线不出现，内容完整可读。移动端（<900px）退化为单列，曲线与配图隐藏。
@@ -151,12 +152,17 @@ import skins from '../assets/characters-default-skins.png';
 </section>
 
 <style>
-	/* 颜色全部由 currentColor 派生；背景交给页面统一渐变，本区块透明 */
+	/* 米白底自己写死，不依赖页面背景；派生色以 ink 为 currentColor 基准 */
 	.vision {
+		--ink: #171310;
+		--cream: #fef9ed;
 		--moss: #86c15c;
+		--lake: #5bb8e8;
+		--tangerine: #f5a623;
+		--blossom: #f39fc5;
 		--hairline: color-mix(in srgb, currentColor 14%, transparent);
 		--muted: color-mix(in srgb, currentColor 58%, transparent);
-		--faint: color-mix(in srgb, currentColor 36%, transparent);
+		--faint: color-mix(in srgb, currentColor 42%, transparent);
 		--act-gap: clamp(8rem, 20vh, 15rem); /* 章节间的呼吸留白 */
 		--coda-gap: clamp(2.4rem, 4vw, 4.5rem);
 		--font-cjk:
@@ -165,6 +171,8 @@ import skins from '../assets/characters-default-skins.png';
 		--font-mono: 'Cascadia Mono', 'SF Mono', Consolas, ui-monospace, monospace;
 
 		font-family: var(--font-cjk);
+		background-color: var(--cream);
+		color: var(--ink);
 		padding: clamp(10rem, 24vh, 20rem) 6vw clamp(9rem, 22vh, 17rem);
 	}
 
@@ -220,23 +228,22 @@ import skins from '../assets/characters-default-skins.png';
 		fill: none;
 	}
 
-	/* 底层轨迹：永远可见的暗线 */
+	/* 底层轨迹：永远可见的暗轨（2px ink 14%） */
 	.road-track {
 		stroke: var(--hairline);
-		stroke-width: 1;
+		stroke-width: 2;
 	}
 
-	/* 充能层：moss 沿路径随滚动填充（dashoffset 由脚本驱动） */
+	/* 充能层：3px 草绿沿路径随滚动填充（dashoffset 由脚本驱动） */
 	.road-charge {
 		stroke: var(--moss);
-		stroke-width: 1.5;
-		opacity: 0.85;
+		stroke-width: 3;
 	}
 
-	/* 能量波前：充能头部一小段更粗更实的短划——克制，无任何发光 */
+	/* 能量波前：充能头部一小段更粗更实的短划（4px）——克制，无任何发光 */
 	.road-front {
 		stroke: var(--moss);
-		stroke-width: 2.5;
+		stroke-width: 4;
 	}
 
 	/* ---------- 三章：左右交错 ---------- */
@@ -255,8 +262,9 @@ import skins from '../assets/characters-default-skins.png';
 		padding: clamp(4rem, 10vh, 8rem) 0 var(--act-gap);
 	}
 
-	/* 章景配图：立在文字对侧留白区的全彩实录画面，仅桌面出现。
-	   要么不放，放就大大方方——完整彩色，随滚动缓慢视差 */
+	/* 章景配图：立在文字对侧留白区的粗边框相框图，仅桌面出现。
+	   3px+ ink 边框 + 硬偏移阴影 + ±1° 微旋转——像贴在纸上的照片，
+	   随滚动缓慢视差（旋转用独立 rotate 属性，不与脚本的 transform 打架） */
 	.act-figure {
 		display: none;
 		position: absolute;
@@ -265,7 +273,15 @@ import skins from '../assets/characters-default-skins.png';
 		width: 30%;
 		overflow: hidden;
 		pointer-events: none;
+		border: 4px solid var(--ink);
+		border-radius: 12px;
+		box-shadow: 8px 8px 0 var(--ink);
+		background-color: var(--cream);
 	}
+
+	.act[data-act='1'] .act-figure { rotate: 1deg; }
+	.act[data-act='2'] .act-figure { rotate: -1.2deg; }
+	.act[data-act='3'] .act-figure { rotate: 0.8deg; }
 
 	.act-veil {
 		position: absolute;
@@ -277,25 +293,28 @@ import skins from '../assets/characters-default-skins.png';
 		will-change: transform;
 	}
 
-	/* 章首发丝线：从节点出发向文字一侧画开 */
+	/* 章首粗线：从节点出发向文字一侧画开（3px ink 实线） */
 	.act-rule {
 		position: absolute;
 		top: 0;
 		left: 0;
 		right: 0;
-		height: 1px;
-		background: var(--hairline);
+		height: 3px;
+		background: var(--ink);
 		will-change: transform;
 	}
 
-	/* 节点：钉在主线与章首线的交点上；faint 待命，充能经过时点亮 */
+	/* 节点：钉在主线与章首线的交点上的实体方块——3px ink 边框、米白芯待命；
+	   充能经过时草绿填充带一记微旋转压进来，像盖章 */
 	.act-node {
 		position: absolute;
 		top: 0;
 		left: 0;
-		width: 9px;
-		height: 9px;
-		background: var(--faint);
+		box-sizing: border-box;
+		width: 16px;
+		height: 16px;
+		background: var(--cream);
+		border: 3px solid var(--ink);
 		transform: translate(-50%, -50%);
 		will-change: transform, opacity;
 	}
@@ -303,14 +322,17 @@ import skins from '../assets/characters-default-skins.png';
 	.act-node::after {
 		content: '';
 		position: absolute;
-		inset: 0;
+		inset: 1px;
 		background: var(--moss);
 		opacity: 0;
-		transition: opacity 0.35s ease;
+		transition:
+			opacity 0.35s ease,
+			transform 0.35s ease;
 	}
 
 	.act-node.lit::after {
 		opacity: 1;
+		transform: rotate(-8deg);
 	}
 
 	/* ---------- 章眉 ---------- */
@@ -322,11 +344,23 @@ import skins from '../assets/characters-default-skins.png';
 		margin-bottom: clamp(2.6rem, 6vh, 4.5rem);
 	}
 
+	/* 章号贴纸 chip：三章各配一色（绿/蓝/橙），±2° 旋转用独立
+	   rotate 属性——脚本落座动画只写 transform，贴纸的歪度不会被抹平 */
 	.act-index {
+		display: inline-block;
 		font-size: 0.78rem;
 		letter-spacing: 0.3em;
-		color: var(--faint);
+		color: var(--ink);
+		border: 3px solid var(--ink);
+		border-radius: 8px;
+		box-shadow: 3px 3px 0 var(--ink);
+		padding: 0.45em 0.5em 0.4em 0.85em;
+		rotate: -2deg;
 	}
+
+	.act[data-act='1'] .act-index { background-color: var(--moss); }
+	.act[data-act='2'] .act-index { background-color: var(--lake); }
+	.act[data-act='3'] .act-index { background-color: var(--tangerine); rotate: 2deg; }
 
 	.act-index::before {
 		content: '/ ';
@@ -344,7 +378,7 @@ import skins from '../assets/characters-default-skins.png';
 		font-size: 0.72rem;
 		letter-spacing: 0.3em;
 		text-transform: uppercase;
-		color: var(--faint);
+		color: var(--muted);
 		text-align: right;
 	}
 
@@ -380,26 +414,35 @@ import skins from '../assets/characters-default-skins.png';
 		will-change: transform;
 	}
 
-	/* ---------- 第一章证据：README 原话 ---------- */
+	/* ---------- 第一章证据：README 原话——贴在纸上的便签面板 ---------- */
 	.readme-quote {
 		display: inline-block;
-		border-left: 1px solid var(--hairline);
-		padding-left: 1.6rem;
+		border: 3px solid var(--ink);
+		border-radius: 10px;
+		box-shadow: 5px 5px 0 var(--ink);
+		background-color: var(--cream);
+		padding: 0.9rem 1.5rem;
 		font-family: var(--font-mono);
 		font-size: 0.78rem;
 		letter-spacing: 0.22em;
 		text-transform: uppercase;
 		line-height: 1.9;
-		color: var(--faint);
+		color: var(--muted);
+		rotate: -1deg;
 		will-change: transform;
 	}
 
-	/* ---------- 第二章证据：模组账目 ---------- */
+	/* ---------- 第二章证据：模组账目——粗边框账本面板 ---------- */
 	.mod-ledger {
 		list-style: none;
 		margin: 0;
 		padding: 0;
 		max-width: 46em;
+		border: 3px solid var(--ink);
+		border-radius: 10px;
+		box-shadow: 5px 5px 0 var(--ink);
+		background-color: var(--cream);
+		overflow: hidden;
 	}
 
 	.mod-row {
@@ -407,13 +450,13 @@ import skins from '../assets/characters-default-skins.png';
 		align-items: flex-end;
 		justify-content: space-between;
 		gap: 2rem;
-		padding-block: clamp(1.3rem, 3vh, 2rem);
-		border-top: 1px solid var(--hairline);
+		padding: clamp(1.3rem, 3vh, 2rem) 1.4rem;
+		border-top: 2px solid var(--ink);
 		will-change: transform;
 	}
 
-	.mod-row:last-child {
-		border-bottom: 1px solid var(--hairline);
+	.mod-row:first-child {
+		border-top: 0;
 	}
 
 	.mod-meta {
@@ -433,7 +476,7 @@ import skins from '../assets/characters-default-skins.png';
 		font-size: 0.72rem;
 		letter-spacing: 0.26em;
 		text-transform: uppercase;
-		color: var(--faint);
+		color: var(--muted);
 	}
 
 	/* ---------- 尾声 ---------- */
@@ -442,14 +485,17 @@ import skins from '../assets/characters-default-skins.png';
 		padding: clamp(3.5rem, 9vh, 7rem) 0 clamp(2rem, 5vh, 4rem) var(--coda-gap);
 	}
 
-	/* 主线的终点：moss 色端点——路还在往下走 */
+	/* 主线的终点：实体化 moss 端点——3px ink 边框 + 小硬阴影，路还在往下走 */
 	.coda-node {
 		position: absolute;
 		left: 0;
 		top: calc(clamp(3.5rem, 9vh, 7rem) + 0.62em);
-		width: 11px;
-		height: 11px;
+		box-sizing: border-box;
+		width: 18px;
+		height: 18px;
 		background: var(--moss);
+		border: 3px solid var(--ink);
+		box-shadow: 3px 3px 0 var(--ink);
 		transform: translate(-50%, -50%);
 		font-size: clamp(1.9rem, 3.8vw, 3.5rem); /* 借字号定位到首行中线 */
 		will-change: transform, opacity;
@@ -462,13 +508,21 @@ import skins from '../assets/characters-default-skins.png';
 		margin: 0;
 	}
 
+	/* 「未完」贴纸：樱花粉 chip，旋转走独立 rotate 属性避开脚本 transform */
 	.coda-note {
+		display: inline-block;
 		margin-top: clamp(1.4rem, 3.5vh, 2.4rem);
 		font-family: var(--font-mono);
 		font-size: 0.72rem;
 		letter-spacing: 0.3em;
 		text-transform: uppercase;
-		color: var(--faint);
+		color: var(--ink);
+		background-color: var(--blossom);
+		border: 3px solid var(--ink);
+		border-radius: 8px;
+		box-shadow: 3px 3px 0 var(--ink);
+		padding: 0.5em 0.6em 0.45em 0.9em;
+		rotate: 1.5deg;
 		will-change: transform;
 	}
 

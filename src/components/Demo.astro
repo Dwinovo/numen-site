@@ -1,14 +1,16 @@
 ---
 // Demo — 言出法随 · 实录
 // 全站签名区块：一段真实对话，随滚动逐拍上演。
-// 编排分四幕：你说（逐字成句）→ 它应 → 它做（工具链读出条 + 矿下实录显影）→ 它成（焦点回收到结果）。
+// 编排分四幕：你说（逐字成句）→ 它应 → 它做（终端读出条 + 矿下实录相框显影）→ 它成（焦点回收到结果）。
 import { Image } from 'astro:assets';
 import footage from '../assets/cave-mineshaft.png';
 ---
 
 <section class="demo" id="demo">
 	<div class="footage" aria-hidden="true">
-		<Image src={footage} alt="" class="footage-img" widths={[1280, 1920, 2560]} sizes="100vw" loading="lazy" />
+		<div class="footage-frame">
+			<Image src={footage} alt="" class="footage-img" widths={[1280, 1920, 2560]} sizes="100vw" loading="lazy" />
+		</div>
 	</div>
 	<div class="demo-inner">
 		<p class="demo-eyebrow">言出法随 · 实录</p>
@@ -28,7 +30,7 @@ import footage from '../assets/cave-mineshaft.png';
 				<p class="text">这就去。先下矿找铁。</p>
 			</div>
 
-			<!-- 第三幕：它执行（机器读出条） -->
+			<!-- 第三幕：它执行（ink 底终端条） -->
 			<div class="msg toolchain" data-msg="tool">
 				<code class="tc" aria-label="4 步 · locate_biome · move_to · auto_mine · collect_items ✓"><span class="tc-part tc-count" aria-hidden="true">4 步</span><span class="tc-part tc-step" aria-hidden="true"> · locate_biome</span><span class="tc-part tc-step" aria-hidden="true"> · move_to</span><span class="tc-part tc-step" aria-hidden="true"> · auto_mine</span><span class="tc-part tc-step" aria-hidden="true"> · collect_items</span><span class="tc-part tc-done" aria-hidden="true"> ✓</span></code>
 				<span class="tc-progress" aria-hidden="true"></span>
@@ -47,12 +49,12 @@ import footage from '../assets/cave-mineshaft.png';
 
 <style>
 	.demo {
-		--void: #0e0c0a;
 		--cream: #fef9ed;
+		--ink: #171310;
 		--moss: #86c15c;
-		--hairline: color-mix(in srgb, currentColor 14%, transparent);
-		--muted: color-mix(in srgb, currentColor 58%, transparent);
-		--faint: color-mix(in srgb, currentColor 36%, transparent);
+		--moss-tint: color-mix(in srgb, #86c15c 28%, #fef9ed);
+		--muted: color-mix(in srgb, var(--ink) 62%, transparent);
+		--faint: color-mix(in srgb, var(--ink) 44%, transparent);
 		--font-cjk:
 			'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC',
 			'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
@@ -64,19 +66,29 @@ import footage from '../assets/cave-mineshaft.png';
 		align-items: center;
 		overflow: hidden;
 		padding: clamp(6rem, 14vh, 10rem) 6vw;
-		background-color: var(--void);
-		color: var(--cream);
+		background-color: var(--cream);
+		color: var(--ink);
 		font-family: var(--font-cjk);
 	}
 
-	/* 矿下实录：执行阶段才显影的背景信号，完成时随焦点回收退场 */
+	/* 矿下实录：执行阶段才在粗边框相框里显影，完成时随焦点回收退场 */
 	.footage {
 		position: absolute;
-		inset: 0;
+		inset: clamp(3.5rem, 9vh, 6.5rem) 4vw;
 		z-index: 0;
 		opacity: 0;
 		will-change: clip-path, opacity;
 		pointer-events: none;
+	}
+
+	/* 相框本体：4px ink 边框 + 10px 硬阴影 + 圆角，右/下各留 10px 给阴影 */
+	.footage-frame {
+		position: absolute;
+		inset: 0 10px 10px 0;
+		border: 4px solid var(--ink);
+		border-radius: 10px;
+		box-shadow: 10px 10px 0 var(--ink);
+		overflow: hidden;
 	}
 
 	.footage :global(.footage-img) {
@@ -88,14 +100,15 @@ import footage from '../assets/cave-mineshaft.png';
 		will-change: transform;
 	}
 
-	.footage::after {
+	/* 米白薄纱：画面保持明亮，卡片后方不抢戏 */
+	.footage-frame::after {
 		content: '';
 		position: absolute;
 		inset: 0;
-		background: rgba(14, 12, 10, 0.82);
+		background: rgba(254, 249, 237, 0.45);
 	}
 
-	/* 舞台：一根 880px 的窄列居中，四周全是黑，像聚光灯下的一段记录 */
+	/* 舞台：一根 880px 的窄列居中，实体便签卡逐拍上桌 */
 	.demo-inner {
 		position: relative;
 		z-index: 1;
@@ -107,9 +120,10 @@ import footage from '../assets/cave-mineshaft.png';
 	.demo-eyebrow {
 		font-family: var(--font-mono);
 		font-size: 0.8rem;
+		font-weight: 700;
 		letter-spacing: 0.35em;
 		text-transform: uppercase;
-		color: var(--faint);
+		color: var(--muted);
 		margin-bottom: clamp(3.5rem, 9vh, 6rem);
 	}
 
@@ -119,19 +133,25 @@ import footage from '../assets/cave-mineshaft.png';
 		gap: clamp(2.2rem, 5vh, 3.4rem);
 	}
 
-	/* 消息不做气泡——只用排版：小字署名 + 大字正文 + 一根竖向发丝线 */
+	/* 消息 = 实体便签卡：3px ink 边框 + 硬偏移阴影 + 圆角，±1° 玩心旋转 */
 	.msg {
 		width: fit-content;
 		max-width: 86%;
+		padding: clamp(1rem, 2.2vh, 1.4rem) clamp(1.2rem, 2.6vw, 1.8rem);
+		background-color: var(--cream);
+		border: 3px solid var(--ink);
+		border-radius: 10px;
+		box-shadow: 5px 5px 0 var(--ink);
 	}
 
 	.msg .who {
 		display: block;
 		font-family: var(--font-mono);
 		font-size: 0.72rem;
+		font-weight: 700;
 		letter-spacing: 0.28em;
 		text-transform: uppercase;
-		color: var(--faint);
+		color: var(--muted);
 		margin-bottom: 0.85rem;
 	}
 
@@ -142,20 +162,25 @@ import footage from '../assets/cave-mineshaft.png';
 		letter-spacing: 0.01em;
 	}
 
+	/* 你：米白卡，左侧起 */
 	.from-you {
 		align-self: flex-start;
-		border-left: 1px solid var(--hairline);
-		padding-left: clamp(1.3rem, 2.6vw, 2rem);
+		transform: rotate(-0.8deg);
 	}
 
+	/* Numen：草绿浅底卡，右侧起 */
 	.from-numen {
 		align-self: flex-end;
-		border-left: 2px solid var(--moss);
-		padding-left: clamp(1.3rem, 2.6vw, 2rem);
+		background-color: var(--moss-tint);
+		transform: rotate(0.8deg);
 	}
 
 	.from-numen .who {
-		color: var(--moss);
+		color: var(--ink);
+	}
+
+	.msg-final {
+		transform: rotate(-0.7deg);
 	}
 
 	.typed .ch {
@@ -173,17 +198,22 @@ import footage from '../assets/cave-mineshaft.png';
 		opacity: 0;
 	}
 
-	/* 工具链：横贯整列的机器读出条——上下发丝线夹一行等宽字，
-	   底边一根苔绿进度线随执行推进 */
+	/* 工具链：横贯整列的"终端条"实体块——ink 底米白等宽字，
+	   底边一根苔绿进度条随执行推进 */
 	.toolchain {
 		position: relative;
 		align-self: stretch;
 		width: 100%;
 		max-width: 100%;
 		margin-block: clamp(0.6rem, 2vh, 1.4rem);
-		padding-block: clamp(1.1rem, 2.4vh, 1.6rem);
-		border-top: 1px solid var(--hairline);
-		border-bottom: 1px solid var(--hairline);
+		padding: clamp(1.1rem, 2.4vh, 1.6rem) clamp(1.2rem, 2.6vw, 1.8rem) calc(clamp(1.1rem, 2.4vh, 1.6rem) + 4px);
+		background-color: var(--ink);
+		color: var(--cream);
+		border: 3px solid var(--ink);
+		border-radius: 10px;
+		box-shadow: 5px 5px 0 var(--ink);
+		overflow: hidden;
+		transform: none;
 	}
 
 	.tc {
@@ -192,7 +222,7 @@ import footage from '../assets/cave-mineshaft.png';
 		font-size: clamp(0.82rem, 1.35vw, 1.05rem);
 		letter-spacing: 0.05em;
 		line-height: 1.9;
-		color: var(--muted);
+		color: color-mix(in srgb, var(--cream) 58%, transparent);
 		white-space: normal;
 		overflow-wrap: break-word;
 	}
@@ -217,9 +247,9 @@ import footage from '../assets/cave-mineshaft.png';
 	.tc-progress {
 		position: absolute;
 		left: 0;
-		bottom: -1px;
+		bottom: 0;
 		width: 100%;
-		height: 1px;
+		height: 4px;
 		background-color: var(--moss);
 		transform: scaleX(0);
 		transform-origin: left center;
@@ -300,12 +330,12 @@ import footage from '../assets/cave-mineshaft.png';
 			// —— 第二幕：它应答（停一拍再来，像真的在想）——
 			tl.from(msgAck, { autoAlpha: 0, y: 44, duration: 0.7 }, 2.7);
 
-			// —— 第三幕：它执行。读出条落位，四步逐一点亮、随即退灰，
-			//    底部苔绿进度线匀速推进，末端 ✓ 弹出定音；
-			//    同时矿下实录在背景显影——它真的下矿了 ——
+			// —— 第三幕：它执行。终端条落位，四步逐一点亮、随即退灰，
+			//    底部苔绿进度条匀速推进，末端 ✓ 弹出定音；
+			//    同时矿下实录在相框里显影——它真的下矿了 ——
 			tl.from(tool, { autoAlpha: 0, y: 30, duration: 0.5 }, 3.8)
 				/* 信号接通：矿下实录自中缝横向扫开（clip-path 左右向）——
-				   像带宽被拉开、信号铺满全屏，而不是灯被调亮；
+				   像带宽被拉开、信号铺满相框，而不是灯被调亮；
 				   内层图 1.22→1.07 反向收缩落位（expo.out），揭开即对焦 */
 				.fromTo(
 					q('.footage'),
