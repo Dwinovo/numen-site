@@ -1,0 +1,8 @@
+{
+	"name": "numen-maven",
+	"type": "Maven 仓库",
+	"order": 4,
+	"author": "Dwinovo",
+	"description": "Numen 生态的 Maven 仓库，托管 numen-api 各版本构件（含 -sources / -javadoc）。开发附属时把它配进仓库源即可拉取依赖。",
+	"links": [{ "href": "https://github.com/Dwinovo/numen-maven" }]
+}

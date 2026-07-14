@@ -1,17 +1,12 @@
 ---
-// 关于 —— 编辑级名片：近单色（墨黑 + 米白，草绿仅一处），巨型名字排版为主角，
-// 头像相框（硬阴影）为唯一实体签名物，其余靠留白与对齐。粗野主义的骨，编辑级的静。
+// 关于 —— 名片式单屏：左栏头像相框 + 身份 + 社交实体按钮，右栏「你好，我是…」自我陈述 + 引用相框 + 协作邀约。
+// 布局参考个人主页名片，风格保持粗新野主义：粗边相框、硬阴影实体件、草绿划线（主）+ 樱粉（协作，一处两彩克制）。
 // 事实取自作者抖音简介与 dwinovo.cn/about，不编造。
 import Subpage from '../layouts/Subpage.astro';
 import { Image } from 'astro:assets';
 import avatar from '../assets/dwinovo-avatar.jpg';
 
 const focus = ['Agent 开发', 'MC 模组开发', '全栈工程', '隐蔽智能体通信'];
-const contact = [
-	{ k: '微信', v: 'Dwinovo', href: null },
-	{ k: '邮箱', v: '2328703107@qq.com', href: 'mailto:2328703107@qq.com' },
-	{ k: 'GitHub', v: 'github.com/Dwinovo ↗', href: 'https://github.com/Dwinovo' },
-];
 ---
 
 <Subpage
@@ -20,58 +15,66 @@ const contact = [
 	current="about"
 >
 	<article class="card">
-		<!-- ============ 名头 ============ -->
+		<!-- ============ 标题 ============ -->
 		<header class="mast">
-			<div class="mast-lede">
-				<p class="eyebrow">关于 · ABOUT</p>
-				<h1 class="name">Dwinovo</h1>
-				<p class="role">北邮在读 &nbsp;·&nbsp; 网络空间安全</p>
-			</div>
-			<figure class="portrait">
-				<Image src={avatar} alt="Dwinovo 的头像" widths={[240, 480]} sizes="220px" />
-			</figure>
+			<h1 class="title">关于</h1>
 		</header>
 
-		<!-- ============ 陈述 ============ -->
-		<section class="statement">
-			<p class="lead">
-				我给大模型一副<span class="mark">身体</span>——让它走出聊天框，住进一个能真实感知、真实行动的世界。
-			</p>
-			<p class="sub">
-				这就是 <a href="https://github.com/Dwinovo" target="_blank" rel="noopener">Numen</a>，由我一个人独立创造并维护。技术不该只是"硬核"，更要产生真实世界的影响。
-			</p>
-		</section>
+		<!-- ============ 名片双栏 ============ -->
+		<div class="profile">
+			<!-- 左栏：头像 + 身份 + 社交 -->
+			<aside class="who">
+				<figure class="portrait">
+					<Image src={avatar} alt="Dwinovo 的头像" widths={[240, 480]} sizes="220px" />
+				</figure>
+				<h2 class="who-name">Dwinovo</h2>
+				<p class="who-role">网络空间安全<br />北京邮电大学</p>
 
-		<!-- ============ 索引：专注 / 联系 ============ -->
-		<footer class="index">
-			<div class="idx-col">
-				<p class="idx-label">专注 / FOCUS</p>
-				<ul class="idx-list">
+				<div class="socials">
+					<a class="soc" href="mailto:2328703107@qq.com" aria-label="邮箱" title="2328703107@qq.com">
+						<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<rect x="3" y="5" width="18" height="14" rx="2" />
+							<path d="m3 7 9 6 9-6" />
+						</svg>
+					</a>
+					<a class="soc" href="https://github.com/Dwinovo" target="_blank" rel="noopener" aria-label="GitHub" title="github.com/Dwinovo">
+						<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+							<path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.37-3.37-1.37-.46-1.18-1.11-1.5-1.11-1.5-.9-.63.07-.62.07-.62 1 .07 1.53 1.05 1.53 1.05.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.05 0-1.12.39-2.03 1.03-2.74-.1-.26-.45-1.3.1-2.7 0 0 .84-.28 2.75 1.05a9.3 9.3 0 0 1 2.5-.34c.85 0 1.71.12 2.5.34 1.91-1.33 2.75-1.05 2.75-1.05.55 1.4.2 2.44.1 2.7.64.71 1.03 1.62 1.03 2.74 0 3.92-2.34 4.78-4.57 5.04.36.32.68.94.68 1.9 0 1.37-.01 2.48-.01 2.82 0 .27.18.6.69.49A10.02 10.02 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z" />
+						</svg>
+					</a>
+				</div>
+
+				<div class="wx-line">
+					<span class="soc soc-wx" title="微信号：Dwinovo">
+						<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+							<path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.111 2.361-.318a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.111.24-.246 0-.06-.023-.12-.038-.177l-.327-1.233a.582.582 0 0 1-.023-.156.49.49 0 0 1 .201-.398C23.024 18.48 24 16.82 24 14.98c0-3.21-2.931-5.837-6.656-6.088v-.034zm-3.375 2.983c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982zm4.844 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982z" />
+						</svg>
+						<span class="soc-wx-id">Dwinovo</span>
+					</span>
+				</div>
+			</aside>
+
+			<!-- 右栏：自我陈述 -->
+			<section class="say">
+				<h2 class="hi">你好，我是 <span class="mark-name">Dwinovo</span> <span class="wave">👋</span></h2>
+
+				<p class="lead">
+					我热衷于用<span class="mark">代码</span>构建未来。我专注于 <strong>Agent 开发</strong>与<strong>全栈开发</strong>，并在<strong>隐蔽智能体通信</strong>领域有深入实践。我也乐于探索把技术构想转化为实际产品的商业模式。
+				</p>
+
+				<blockquote class="quote">
+					技术不该只是"硬核"——它更要产生<strong>真实世界的影响</strong>。
+				</blockquote>
+
+				<p class="sub">
+					始终走在前沿。<span class="mark-pink">欢迎交流合作</span>，一起做点酷东西。
+				</p>
+
+				<ul class="chips" aria-label="专注方向">
 					{focus.map((f) => <li>{f}</li>)}
 				</ul>
-			</div>
-			<div class="idx-col">
-				<p class="idx-label">联系 / CONTACT</p>
-				<dl class="idx-contact">
-					{
-						contact.map((c) => (
-							<div class="idx-crow">
-								<dt>{c.k}</dt>
-								<dd>
-									{c.href ? (
-										<a href={c.href} target={c.href.startsWith('http') ? '_blank' : undefined} rel="noopener">
-											{c.v}
-										</a>
-									) : (
-										<span>{c.v}</span>
-									)}
-								</dd>
-							</div>
-						))
-					}
-				</dl>
-			</div>
-		</footer>
+			</section>
+		</div>
 	</article>
 </Subpage>
 
@@ -79,53 +82,47 @@ const contact = [
 	.card {
 		width: min(1080px, 90vw);
 		margin-inline: auto;
-		padding: clamp(5.5rem, 11vh, 7.5rem) 0 clamp(3.5rem, 7vh, 5rem);
+		padding: clamp(5rem, 10vh, 7rem) 0 clamp(3rem, 6vh, 4.5rem);
 	}
 
-	/* ============ 名头 ============ */
+	/* ============ 标题 ============ */
 	.mast {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto;
-		align-items: center;
-		gap: clamp(1.5rem, 5vw, 4rem);
+		margin: 0;
 	}
 
-	.eyebrow {
-		margin: 0 0 clamp(1rem, 2.5vh, 1.6rem);
-		font-family: var(--font-mono);
-		font-size: 0.78rem;
-		font-weight: 700;
-		letter-spacing: 0.36em;
-		text-transform: uppercase;
-		color: var(--faint);
-	}
-
-	.name {
+	.title {
 		margin: 0;
 		font-weight: 900;
-		font-size: clamp(3.6rem, 13vw, 9rem);
-		line-height: 0.88;
-		letter-spacing: -0.045em;
+		font-size: clamp(2.4rem, 5vw, 4rem);
+		line-height: 1.1;
+		letter-spacing: -0.02em;
 		color: var(--ink);
 	}
 
-	.role {
-		margin: clamp(1.1rem, 2.5vh, 1.6rem) 0 0;
-		font-family: var(--font-mono);
-		font-size: clamp(0.82rem, 1.3vw, 1rem);
-		letter-spacing: 0.08em;
-		color: var(--muted);
+	/* ============ 名片双栏 ============ */
+	.profile {
+		margin-top: clamp(2.4rem, 5vh, 3.6rem);
+		display: grid;
+		grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
+		gap: clamp(2rem, 5vw, 4.5rem);
+		align-items: start;
 	}
 
-	/* 唯一实体签名物 —— 头像相框 + 硬阴影 */
+	/* ---- 左栏：身份 ---- */
+	.who {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+	}
+
 	.portrait {
-		margin: 0;
-		flex-shrink: 0;
-		width: clamp(120px, 19vw, 210px);
+		margin: 0 0 clamp(1.2rem, 3vh, 1.8rem);
+		width: clamp(150px, 60%, 200px);
 		aspect-ratio: 1;
 		border: 3px solid var(--ink);
 		border-radius: 16px;
-		box-shadow: 9px 9px 0 var(--ink);
+		box-shadow: 8px 8px 0 var(--ink);
 		overflow: hidden;
 		background-color: #fff;
 		transform: rotate(-2deg);
@@ -138,37 +135,164 @@ const contact = [
 		display: block;
 	}
 
-	/* ============ 陈述 ============ */
-	.statement {
-		margin-top: clamp(2.5rem, 6vh, 4.5rem);
-		max-width: min(54rem, 100%);
-	}
-
-	.lead {
+	.who-name {
 		margin: 0;
-		font-weight: 800;
-		font-size: clamp(1.5rem, 3vw, 2.3rem);
-		line-height: 1.5;
-		letter-spacing: -0.01em;
+		font-weight: 900;
+		font-size: clamp(1.5rem, 2.4vw, 1.9rem);
+		letter-spacing: -0.02em;
 		color: var(--ink);
 	}
 
-	/* 全站唯一一处彩色：草绿标记笔划线 */
+	.who-role {
+		margin: 0.5rem 0 0;
+		font-family: var(--font-mono);
+		font-size: 0.82rem;
+		font-weight: 700;
+		line-height: 1.7;
+		letter-spacing: 0.04em;
+		color: var(--muted);
+	}
+
+	/* ---- 社交实体按钮 ---- */
+	.socials {
+		margin-top: clamp(1.3rem, 3vh, 1.8rem);
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		align-items: center;
+		gap: 0.7rem;
+	}
+
+	.soc {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		color: var(--ink);
+		background-color: #fff;
+		border: 3px solid var(--ink);
+		border-radius: 10px;
+		box-shadow: 4px 4px 0 var(--ink);
+		padding: 0.5rem;
+		text-decoration: none;
+		transition: transform 0.15s ease, box-shadow 0.15s ease;
+	}
+
+	a.soc:hover,
+	a.soc:focus-visible {
+		transform: translate(-2px, -2px);
+		box-shadow: 6px 6px 0 var(--ink);
+	}
+
+	a.soc:active {
+		transform: translate(2px, 2px);
+		box-shadow: 2px 2px 0 var(--ink);
+	}
+
+	.soc svg {
+		display: block;
+	}
+
+	/* 微信单独一行、居中 */
+	.wx-line {
+		margin-top: 0.75rem;
+		display: flex;
+		justify-content: center;
+	}
+
+	/* 微信不可点击 —— 直接把微信号亮出来 */
+	.soc-wx {
+		cursor: default;
+		padding-inline: 0.55rem 0.7rem;
+	}
+
+	.soc-wx-id {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		font-weight: 700;
+		letter-spacing: 0.02em;
+	}
+
+	/* ---- 右栏：陈述 ---- */
+	.say {
+		min-width: 0;
+	}
+
+	.hi {
+		margin: 0;
+		font-weight: 900;
+		font-size: clamp(1.7rem, 3.4vw, 2.7rem);
+		line-height: 1.2;
+		letter-spacing: -0.02em;
+		color: var(--ink);
+	}
+
+	/* 名字草绿划线高亮（主色） */
+	.mark-name {
+		box-shadow: inset 0 -0.28em 0 var(--grass);
+	}
+
+	.wave {
+		display: inline-block;
+		transform-origin: 70% 70%;
+		animation: wave 2.4s ease-in-out infinite;
+	}
+
+	@keyframes wave {
+		0%, 60%, 100% { transform: rotate(0deg); }
+		10% { transform: rotate(14deg); }
+		20% { transform: rotate(-8deg); }
+		30% { transform: rotate(14deg); }
+		40% { transform: rotate(-4deg); }
+		50% { transform: rotate(10deg); }
+	}
+
+	.lead {
+		margin: clamp(1.4rem, 3vh, 2rem) 0 0;
+		font-size: clamp(1.02rem, 1.5vw, 1.22rem);
+		line-height: 1.9;
+		color: var(--ink);
+	}
+
+	.lead strong {
+		font-weight: 800;
+	}
+
 	.mark {
 		box-shadow: inset 0 -0.32em 0 var(--grass);
+		font-weight: 800;
+	}
+
+	/* 引用相框 —— 草绿粗左边 + 硬阴影贴纸 */
+	.quote {
+		margin: clamp(1.6rem, 3.5vh, 2.2rem) 0 0;
+		border: 3px solid var(--ink);
+		border-left-width: 10px;
+		border-radius: 12px;
+		box-shadow: 5px 5px 0 var(--ink);
+		background-color: #fff;
+		padding: clamp(1.1rem, 2.5vh, 1.5rem) clamp(1.3rem, 3vw, 1.7rem);
+		font-size: clamp(1.02rem, 1.5vw, 1.2rem);
+		font-style: italic;
+		line-height: 1.7;
+		color: var(--ink);
+		transform: rotate(-0.6deg);
+	}
+
+	.quote strong {
+		font-style: normal;
+		font-weight: 800;
 	}
 
 	.sub {
-		margin: clamp(1.4rem, 3vh, 2rem) 0 0;
-		max-width: 30em;
-		font-size: clamp(1rem, 1.4vw, 1.2rem);
+		margin: clamp(1.6rem, 3.5vh, 2.2rem) 0 0;
+		font-size: clamp(1rem, 1.4vw, 1.15rem);
 		line-height: 1.9;
 		color: var(--muted);
 	}
 
 	.sub a {
 		color: var(--ink);
-		font-weight: 700;
+		font-weight: 800;
 		text-decoration: underline;
 		text-underline-offset: 4px;
 		text-decoration-thickness: 2px;
@@ -177,96 +301,52 @@ const contact = [
 
 	.sub a:hover { text-decoration-color: var(--grass); }
 
-	/* ============ 索引 ============ */
-	.index {
-		margin-top: clamp(2.5rem, 6vh, 4rem);
-		border-top: 3px solid var(--ink);
-		padding-top: clamp(1.8rem, 4vh, 2.6rem);
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: clamp(2rem, 5vw, 4rem);
+	/* 协作邀约 —— 樱粉划线（第二彩，仅此一处） */
+	.mark-pink {
+		color: var(--ink);
+		font-weight: 800;
+		box-shadow: inset 0 -0.28em 0 var(--sakura);
 	}
 
-	.idx-label {
-		margin: 0 0 clamp(1rem, 2.5vh, 1.5rem);
-		font-family: var(--font-mono);
-		font-size: 0.72rem;
-		font-weight: 700;
-		letter-spacing: 0.24em;
-		text-transform: uppercase;
-		color: var(--faint);
-	}
-
-	.idx-list {
-		margin: 0;
+	/* 专注方向 —— 无填充描边贴纸 chip */
+	.chips {
+		margin: clamp(1.8rem, 4vh, 2.4rem) 0 0;
 		padding: 0;
 		list-style: none;
-	}
-
-	.idx-list li {
-		font-size: clamp(1rem, 1.4vw, 1.18rem);
-		font-weight: 700;
-		line-height: 1.9;
-		color: var(--ink);
-	}
-
-	.idx-contact {
-		margin: 0;
 		display: flex;
-		flex-direction: column;
-		gap: 0.55rem;
+		flex-wrap: wrap;
+		gap: 0.6rem;
 	}
 
-	.idx-crow {
-		display: flex;
-		align-items: baseline;
-		gap: 1.1rem;
-	}
-
-	.idx-crow dt {
-		flex-shrink: 0;
-		width: 3.4em;
+	.chips li {
 		font-family: var(--font-mono);
 		font-size: 0.8rem;
 		font-weight: 700;
-		letter-spacing: 0.06em;
-		color: var(--faint);
-	}
-
-	.idx-crow dd {
-		margin: 0;
-		min-width: 0;
-		font-family: var(--font-mono);
-		font-size: clamp(0.9rem, 1.2vw, 1rem);
-		font-weight: 700;
+		letter-spacing: 0.02em;
 		color: var(--ink);
-		word-break: break-all;
+		border: 3px solid var(--ink);
+		border-radius: 999px;
+		padding: 0.32em 0.8em;
 	}
 
-	.idx-crow a {
-		color: var(--ink);
-		text-decoration: underline;
-		text-underline-offset: 4px;
-		text-decoration-thickness: 2px;
-		text-decoration-color: var(--hairline);
-		transition: text-decoration-color 0.15s ease;
-	}
-
-	.idx-crow a:hover { text-decoration-color: var(--grass); }
+	.chips li:nth-child(odd) { transform: rotate(-1.5deg); }
+	.chips li:nth-child(even) { transform: rotate(1.5deg); }
 
 	/* ============ 响应式 ============ */
-	@media (max-width: 680px) {
-		.mast {
+	@media (max-width: 720px) {
+		.profile {
 			grid-template-columns: 1fr;
-			gap: 1.8rem;
+			gap: clamp(2rem, 6vh, 2.8rem);
+		}
+		.who {
+			align-items: center;
 		}
 		.portrait {
-			order: -1;
-			width: clamp(104px, 30vw, 140px);
+			width: clamp(130px, 42vw, 170px);
 		}
-		.index {
-			grid-template-columns: 1fr;
-			gap: 2.2rem;
-		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.wave { animation: none; }
 	}
 </style>

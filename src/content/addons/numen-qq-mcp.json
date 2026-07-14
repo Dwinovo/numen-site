@@ -1,0 +1,8 @@
+{
+	"name": "numen-qq-mcp",
+	"type": "MCP",
+	"order": 3,
+	"author": "Dwinovo",
+	"description": "把 QQ 接入 Numen 的 MCP 服务，让同伴的触角延伸到游戏之外的聊天场景。",
+	"links": [{ "href": "https://github.com/Dwinovo/numen-qq-mcp" }]
+}

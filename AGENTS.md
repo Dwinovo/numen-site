@@ -27,20 +27,22 @@ Numen 是一个围绕 Minecraft 与 AI 的开源生态，包含以下仓库：
 - 四个仓库的详细展示放在**后续的 addons 页面**；`src/components/Ecosystem.astro`（编辑部式仓库索引 + hover 实录预览）已做好，保留待 addons 页复用。
 - 页脚不做整页背景色渐变（体感突兀），页脚自带深色背景作为实体块推入。
 
-## 规划中的功能
+## 附属共建：GitHub PR 模式（重大决策，2026-07-14）
 
-- **GitHub 登录**：未来支持用户使用 GitHub 账号登录。
-- **用户上传 skill / MCP**：登录用户可以提交自己的 skill 和 MCP，但本站**不存储内容本体**，只保存并展示其 CurseForge 链接或 GitHub 链接（纯索引/展示性质）。
+**站点退化为纯静态,附属目录改由 GitHub PR 社区共建。** 动机:国内运营「登录 + 用户自助上传 + 即时上线」的 UGC 交互平台合规负担极重(实名、内容审核留存、可能需 ICP 经营许可 + 公安联网备案),个人主体是灰色地带。改成 PR 模式后,发布动作发生在 GitHub、审核发生在维护者点 Merge 的那一刻,站点退回成「只展示已审核内容的发布者」,把最重的义务甩掉;同时这正是本项目「只做索引、不存内容本体」初衷的最纯粹实现。
+
+- **数据源**:`src/content/addons/*.json`(Astro 内容集合,一文件一条附属,PR 合并零冲突)。schema 写死在 `src/content.config.ts`,格式错的投稿连 `astro build` 都过不了,CI(`.github/workflows/validate.yml`)在合并前拦下。
+- **协作流程**:Fork → 加/改一个 json → PR →(CI 校验 + 维护者 review)→ Merge → EdgeOne Pages 自动构建部署。投稿门槛=会 GitHub PR,恰好筛出开发者受众。见 `CONTRIBUTING.md`、`.github/PULL_REQUEST_TEMPLATE.md`。
+- **已砍掉的动态栈**:登录(better-auth/GitHub OAuth)、数据库(D1/SQLite/Drizzle)、所有 `/api/*`、`login`/`me`/`submit`/`u/[id]` 页、点赞/评论。连带砍掉源站保护那整套(回源鉴权/自签证书/防火墙白名单)——没有动态源站要藏了。
+- addons 详情弹窗:数据构建期内联进页面(`data-addons` script),点卡片本地取用,不请求;`/a/[id]` 另生成静态详情页供直链/无 JS/SEO。
 
 ## 技术栈（已确定）
 
-- **框架**：Astro（混合渲染，静态优先）+ React 岛屿（交互部分）
+- **框架**：Astro **纯静态**(`output: 'static'`,全站预渲染,无 adapter、无服务端、无数据库)
 - **样式**：Tailwind CSS v4
 - **动效**：GSAP + ScrollTrigger（滚动运镜）、Lenis（平滑滚动）、Three.js（按需，3D 场景）——均懒加载，首屏保持轻量
-- **后端/部署**：Cloudflare Workers（静态资源 + SSR 一体，`wrangler deploy`）
-- **数据库**：Cloudflare D1 + Drizzle ORM（只存用户和提交的链接）
-- **认证**：better-auth（GitHub OAuth）
-- **本地开发**：支持 Docker 构建运行
+- **数据**：Astro 内容集合(`src/content/addons/*.json`),zod schema 校验
+- **部署**：**EdgeOne Pages**(连 GitHub 仓库,`npm run build` → `dist/`,merge 到 main 自动构建部署,由 EdgeOne CDN 分发)。旧的腾讯轻量 + Nginx + Node 源站在迁移完成后可退役。
 - 注：Cloudflare 已于 2026 年 1 月收购 Astro，两者为同一生态
 
 ## 素材
@@ -50,9 +52,10 @@ Numen 是一个围绕 Minecraft 与 AI 的开源生态，包含以下仓库：
 
 ## 部署与访问
 
-- 部署到 **Cloudflare**（Workers）。
-- 需要做**国内外双线 CDN**：既方便中国大陆访问，也方便海外访问。技术选型和架构设计需考虑这一点（如静态资源分发、域名解析分流等）。
-- 大陆访问策略：所有资源自托管（字体/图标/JS），不引用大陆不稳定的第三方 CDN；后续可选 ICP 备案 + 境内 CDN 回源。
+- 已上线 **https://dwinovo.cn**(域名已 ICP 备案)。
+- **目标形态:EdgeOne Pages** —— 连 GitHub 仓库,`npm run build` 出 `dist/` 纯静态,merge 到 main 自动构建部署,由 EdgeOne CDN(境内可用区)分发。纯静态后无源站可打,DDoS 面几乎归零。
+- 迁移完成后,旧的「腾讯轻量 + Nginx + Node + 回源鉴权 + 自签证书 + 防火墙白名单」整套源站可退役。
+- 大陆访问策略：所有资源自托管（字体/图标/JS），不引用大陆不稳定的第三方 CDN。
 
 ## Development
 

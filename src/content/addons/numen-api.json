@@ -1,0 +1,11 @@
+{
+	"name": "numen-api",
+	"type": "开发框架",
+	"order": 2,
+	"author": "Dwinovo",
+	"description": "面向开发者的附属开发框架。实现 NumenTool 的工具契约，即可给同伴接上新的能力——从纯 I/O 到真正驱动身体行动的工具。以 NeoForge 1.21.1 为例，详见站内文档。",
+	"links": [
+		{ "href": "https://github.com/Dwinovo/numen-api" },
+		{ "label": "文档", "href": "https://dwinovo.cn/docs" }
+	]
+}

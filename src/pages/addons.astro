@@ -6,55 +6,52 @@
 // 点击卡片弹出详情层：完整描述 + 相关链接（GitHub / CurseForge / Modrinth / 官网……任意多条）。
 // 分页、详情层均为 client-side 增强：无 JS 时卡片直接是首链接的 <a>，全量可见可点。
 import Subpage from '../layouts/Subpage.astro';
+import { getCollection } from 'astro:content';
 
-type EntryLink = { label: string; href: string };
-type Entry = {
-	type: '模组' | '引擎' | 'MCP' | 'Skill' | '工具';
-	name: string;
-	desc: string;
-	author: string;
-	// 第一条是主链接（卡片的无 JS 回退目标）；未来条目可自带 CurseForge / Modrinth 等
-	links: EntryLink[];
-};
+// 数据来自 src/content/addons/*.json（内容集合）——纯静态，构建期读入，无数据库、无接口。
+// 新增/修改附属走 GitHub PR，合并到 main 即由 EdgeOne Pages 自动构建部署。
+// 卡片点开弹窗看详情：详情数据构建期内联进页面，点击本地取用，无需请求。
+const collection = await getCollection('addons');
+const entries = collection
+	.map((e) => ({
+		id: e.id,
+		type: e.data.type ?? '',
+		name: e.data.name,
+		desc: e.data.description,
+		author: e.data.author,
+		links: e.data.links,
+		order: e.data.order ?? 999,
+	}))
+	.sort((a, b) => a.order - b.order || a.name.localeCompare(b.name));
 
-// 条目按提交顺序追加即可——计数、分页、详情全部自动成立。
-const entries: Entry[] = [
-	{
-		type: 'MCP',
-		name: 'numen-qq-mcp',
-		desc: '把游戏里的同伴绑上 QQ。人不在电脑前，私聊一句“把家里的小麦收了”，回来时箱子已经满了。',
-		author: 'Dwinovo · 官方',
-		links: [{ label: 'GitHub', href: 'https://github.com/Dwinovo/numen-qq-mcp' }],
-	},
-];
-
+// 详情层数据：id → 完整字段，序列化进页面供弹窗读取
+const detailMap = Object.fromEntries(
+	entries.map((e) => [e.id, { type: e.type, name: e.name, description: e.desc, author: e.author, links: e.links }]),
+);
 ---
 
-<Subpage title="能力 — Numen" description="Numen 生态的模组、Skill 与 MCP 目录。" current="addons">
+<Subpage title="附属 — Numen" description="Numen 生态的模组、Skill 与 MCP 目录。" current="addons">
 	<div class="catalog" data-catalog>
 		<header class="catalog-head">
-			<h1 class="catalog-title">能力</h1>
+			<h1 class="catalog-title">附属</h1>
 			<p class="catalog-sub">生态里的模组、Skill 与 MCP。本站只做索引——链接指向 GitHub 或 CurseForge，作品永远属于作者。</p>
 		</header>
 		<section class="catalog-body" aria-label="生态目录">
 			<div class="card-grid is-settling" data-grid>
 				{
 					entries.map((e, i) => (
-						<a
-							class="card"
-							data-entry={JSON.stringify(e)}
-							href={e.links[0].href}
-							target="_blank"
-							rel="noopener"
-							style={`--i: ${i}`}
-						>
+						<a class="card" href={`/a/${e.id}`} style={`--i: ${i}`}>
+							{e.type && <span class="card-type">{e.type}</span>}
 							<span class="card-name">{e.name}</span>
 							<span class="card-desc">{e.desc}</span>
 							<span class="card-foot">
-								<span class="card-author">{e.author}</span>
+								<span class="card-author">
+									<span class="card-ava card-ava--fb">{(e.author || 'N').slice(0, 1).toUpperCase()}</span>
+									<span class="card-author-name">{e.author}</span>
+								</span>
 								<span class="card-cue" aria-hidden="true">
-									<span class="cue-a">↗</span>
-									<span class="cue-b">↗</span>
+									<span class="cue-a">→</span>
+									<span class="cue-b">→</span>
 								</span>
 							</span>
 						</a>
@@ -69,21 +66,17 @@ const entries: Entry[] = [
 			</nav>
 		</section>
 
-		<!-- 详情层：点击卡片弹出，展示完整描述与全部相关链接 -->
-		<dialog class="detail" data-detail>
-			<div class="detail-top">
-				<span class="detail-type" data-d-type></span>
-				<button type="button" class="detail-close" data-d-close aria-label="关闭">×</button>
-			</div>
-			<h2 class="detail-name" data-d-name></h2>
-			<p class="detail-desc" data-d-desc></p>
-			<p class="detail-author" data-d-author></p>
-			<div class="detail-links" data-d-links></div>
+		<dialog class="dsheet" data-detail>
+			<div class="dsheet-inner" data-detail-body></div>
 		</dialog>
+
+		<script type="application/json" data-addons set:html={JSON.stringify(detailMap)}></script>
 	</div>
 </Subpage>
 
 <script>
+	import { resolvePlatform } from '../lib/links';
+
 	const PAGE_SIZE = 12; // 4 列 × 3 行
 
 	const catalog = document.querySelector<HTMLElement>('[data-catalog]');
@@ -164,55 +157,64 @@ const entries: Entry[] = [
 			render();
 		});
 
-		// —— 详情层：点击卡片弹出完整信息与全部相关链接 ——
-		const detail = catalog.querySelector<HTMLDialogElement>('[data-detail]');
-		if (detail) {
-			const dType = detail.querySelector<HTMLElement>('[data-d-type]')!;
-			const dName = detail.querySelector<HTMLElement>('[data-d-name]')!;
-			const dDesc = detail.querySelector<HTMLElement>('[data-d-desc]')!;
-			const dAuthor = detail.querySelector<HTMLElement>('[data-d-author]')!;
-			const dLinks = detail.querySelector<HTMLElement>('[data-d-links]')!;
+		// —— 详情弹窗：点卡片本地取用构建期内联的数据，不跳页、不请求 ——
+		const sheet = catalog.querySelector<HTMLDialogElement>('[data-detail]');
+		const body = sheet?.querySelector<HTMLElement>('[data-detail-body]') ?? null;
+		let DATA: Record<string, any> = {};
+		try {
+			DATA = JSON.parse(document.querySelector<HTMLElement>('[data-addons]')?.textContent || '{}');
+		} catch {
+			DATA = {};
+		}
 
-			const hostOf = (href: string) => {
-				try {
-					return new URL(href).hostname.replace(/^www\./, '');
-				} catch {
-					return href;
-				}
-			};
+		const esc = (s: unknown) =>
+			String(s ?? '').replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]!));
 
-			const open = (card: HTMLElement) => {
-				const e = JSON.parse(card.dataset.entry ?? '{}');
-				dType.textContent = e.type ?? '';
-				dName.textContent = e.name ?? '';
-				dDesc.textContent = e.desc ?? '';
-				dAuthor.textContent = e.author ?? '';
-				dLinks.replaceChildren(
-					...(e.links ?? []).map((l: { label: string; href: string }) => {
-						const a = document.createElement('a');
-						a.className = 'detail-link';
-						a.href = l.href;
-						a.target = '_blank';
-						a.rel = 'noopener';
-						a.innerHTML = `<span class="dl-label">${l.label}</span><span class="dl-host">${hostOf(l.href)}</span><span class="dl-cue" aria-hidden="true">↗</span>`;
-						return a;
-					}),
-				);
-				detail.showModal();
-			};
+		const linkHtml = (l: any) => {
+			const p = resolvePlatform(l.href);
+			const label = l.label && String(l.label).trim() ? l.label : p.label;
+			return (
+				`<a class="plink" href="${esc(l.href)}" target="_blank" rel="noopener" style="--brand:${p.color}">` +
+				`<span class="plink-chip"></span><span class="plink-label">${esc(label)}</span>` +
+				`<span class="plink-arrow" aria-hidden="true">↗</span></a>`
+			);
+		};
 
+		const renderDetail = (d: any) => {
+			const links = (d.links || []).length ? `<div class="ds-links">${(d.links || []).map(linkHtml).join('')}</div>` : '';
+			return (
+				`<button class="ds-close" data-close type="button" aria-label="关闭">×</button>` +
+				(d.type ? `<span class="ds-type">${esc(d.type)}</span>` : '') +
+				`<h2 class="ds-name">${esc(d.name)}</h2>` +
+				`<p class="ds-desc">${esc(d.description)}</p>` +
+				`<span class="ds-author"><span class="ds-ava ds-ava--fb">${esc((d.author || 'N').slice(0, 1).toUpperCase())}</span>` +
+				`<span class="ds-author-name">${esc(d.author)}</span></span>` +
+				links
+			);
+		};
+
+		const openSheet = (id: string) => {
+			if (!sheet || !body) return;
+			const d = DATA[id];
+			if (!d) return;
+			body.innerHTML = renderDetail(d);
+			body.querySelector('[data-close]')?.addEventListener('click', () => sheet.close());
+			if (!sheet.open) sheet.showModal();
+		};
+
+		if (sheet && body) {
 			cards.forEach((card) => {
 				card.addEventListener('click', (ev) => {
 					ev.preventDefault();
-					open(card);
+					const id = (card.getAttribute('href') || '').split('/a/')[1];
+					if (id) openSheet(id);
 				});
 			});
-
-			detail.querySelector('[data-d-close]')?.addEventListener('click', () => detail.close());
-			// 点击面板外（backdrop）关闭
-			detail.addEventListener('click', (ev) => {
-				if (ev.target === detail) detail.close();
+			sheet.addEventListener('click', (ev) => {
+				if (ev.target === sheet) sheet.close();
 			});
+			const wantId = new URLSearchParams(location.search).get('a');
+			if (wantId) openSheet(wantId);
 		}
 
 		// JS 就绪后才亮出分页——无 JS 时它不存在，卡片全量可见。
@@ -363,28 +365,77 @@ const entries: Entry[] = [
 		overflow-wrap: anywhere;
 	}
 
-	/* 描述：常驻可见，钉在底部区——粗野主义信息不玩捉迷藏 */
+	/* 描述：紧贴标题下方 */
 	.card-desc {
-		margin-top: auto;
-		padding-top: clamp(1.8rem, 4vh, 2.6rem);
+		margin-top: clamp(0.8rem, 1.6vh, 1.1rem);
 		font-size: clamp(0.92rem, 1vw, 1rem);
 		line-height: 1.9;
 		color: color-mix(in srgb, var(--nb-ink) 72%, transparent);
 	}
 
-	/* 底行：作者常驻靠左，右端粗箭头 */
+	/* 底行：作者钉在卡片底部，右端粗箭头 */
 	.card-foot {
 		display: flex;
-		align-items: baseline;
+		align-items: center;
 		gap: 1.2em;
-		margin-top: clamp(1.2rem, 2.6vh, 1.8rem);
+		margin-top: auto;
+		padding-top: clamp(1.4rem, 3vh, 2rem);
 	}
 
 	.card-author {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5em;
+		min-width: 0;
+	}
+
+	.card-ava {
+		flex-shrink: 0;
+		width: 32px;
+		height: 32px;
+		object-fit: cover;
+		display: block;
+		border: 2.5px solid var(--nb-ink);
+		border-radius: 8px;
+		box-shadow: 2px 2px 0 var(--nb-ink);
+		background: #fff;
+	}
+
+	.card-ava--fb {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 		font-family: var(--font-mono);
-		font-size: 0.72rem;
-		letter-spacing: 0.12em;
-		color: color-mix(in srgb, var(--nb-ink) 55%, transparent);
+		font-weight: 900;
+		font-size: 0.9rem;
+		color: var(--nb-ink);
+		background: var(--nb-green);
+	}
+
+	.card-author-name {
+		font-family: var(--font-mono);
+		font-size: 0.9rem;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		color: color-mix(in srgb, var(--nb-ink) 68%, transparent);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	/* 类型 chip（有才显示） */
+	.card-type {
+		align-self: flex-start;
+		font-family: var(--font-mono);
+		font-size: 0.66rem;
+		font-weight: 700;
+		color: var(--nb-ink);
+		background: var(--nb-green);
+		border: 2px solid var(--nb-ink);
+		border-radius: 6px;
+		padding: 0.18em 0.5em;
+		margin-bottom: 0.7rem;
+		transform: rotate(-1.5deg);
 	}
 
 	/* 粗箭头：静息态半墨，hover 全墨并滑换——旧箭头出右上，新箭头自左下补位 */
@@ -531,29 +582,31 @@ const entries: Entry[] = [
 	}
 
 	/* ============ 详情层：粗边框 + 大硬阴影的实体面板 ============ */
-	.detail {
+	.dsheet {
 		/* Tailwind preflight 清掉了 dialog 的默认 margin:auto，显式补回居中 */
 		margin: auto;
-		width: min(600px, 92vw);
+		width: min(640px, 92vw);
+		max-height: 86vh;
+		overflow-y: auto;
 		border: 3px solid var(--nb-ink, #171310);
-		border-radius: 10px;
+		border-radius: 12px;
 		background-color: #fef9ed;
 		color: #171310;
 		box-shadow: 10px 10px 0 #171310;
-		padding: clamp(1.8rem, 3vw, 2.8rem);
+		padding: clamp(1.6rem, 3vw, 2.4rem);
 		font-family: var(--font-cjk);
 	}
 
-	.detail::backdrop {
+	.dsheet::backdrop {
 		background: rgba(23, 19, 16, 0.5);
 	}
 
 	@media (prefers-reduced-motion: no-preference) {
-		.detail[open] {
+		.dsheet[open] {
 			animation: detail-rise 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 		}
 
-		.detail[open]::backdrop {
+		.dsheet[open]::backdrop {
 			animation: detail-fade 0.3s ease;
 		}
 	}
@@ -576,6 +629,304 @@ const entries: Entry[] = [
 		to {
 			opacity: 1;
 		}
+	}
+
+	/* ==== 弹窗内容（JS 以 innerHTML 注入，故须 :global 命中）==== */
+	.dsheet {
+		position: relative;
+	}
+	.dsheet :global(.ds-loading) {
+		margin: 0;
+		padding: 2rem 0;
+		text-align: center;
+		color: color-mix(in srgb, #171310 50%, transparent);
+	}
+	.dsheet :global(.ds-close) {
+		position: absolute;
+		top: clamp(1rem, 2vw, 1.4rem);
+		right: clamp(1rem, 2vw, 1.4rem);
+		width: 2.2rem;
+		height: 2.2rem;
+		border: 3px solid #171310;
+		border-radius: 10px;
+		background: #fff;
+		color: #171310;
+		box-shadow: 3px 3px 0 #171310;
+		font-size: 1.1rem;
+		font-weight: 700;
+		line-height: 1;
+		cursor: pointer;
+	}
+	.dsheet :global(.ds-close:hover) {
+		background: #f39fc5;
+	}
+	.dsheet :global(.ds-type) {
+		display: inline-block;
+		font-family: var(--font-mono);
+		font-size: 0.68rem;
+		font-weight: 700;
+		color: #171310;
+		background: #86c15c;
+		border: 2px solid #171310;
+		border-radius: 6px;
+		padding: 0.2em 0.55em;
+		transform: rotate(-1.5deg);
+	}
+	.dsheet :global(.ds-name) {
+		margin: 0.7rem 3rem 0 0;
+		font-weight: 900;
+		font-size: clamp(1.5rem, 3vw, 2.1rem);
+		line-height: 1.15;
+		letter-spacing: -0.02em;
+		overflow-wrap: anywhere;
+	}
+	.dsheet :global(.ds-author) {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.7rem;
+		margin-top: 1.6rem;
+		text-decoration: none;
+		color: #171310;
+		width: fit-content;
+	}
+	.dsheet :global(.ds-ava) {
+		width: 44px;
+		height: 44px;
+		object-fit: cover;
+		display: block;
+		border: 2.5px solid #171310;
+		border-radius: 10px;
+		box-shadow: 3px 3px 0 #171310;
+		background: #fff;
+	}
+	.dsheet :global(.ds-ava--fb) {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		font-weight: 900;
+		font-size: 1.15rem;
+		background: #86c15c;
+	}
+	.dsheet :global(.ds-author-name) {
+		font-weight: 800;
+		font-size: 1.05rem;
+	}
+	.dsheet :global(a.ds-author:hover .ds-author-name) {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+		text-decoration-thickness: 2px;
+	}
+	.dsheet :global(.ds-links) {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.6rem;
+		margin-top: 1.4rem;
+	}
+	.dsheet :global(.plink) {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		font-weight: 700;
+		color: #171310;
+		text-decoration: none;
+		border: 2px solid #171310;
+		border-radius: 8px;
+		box-shadow: 3px 3px 0 #171310;
+		background: #fff;
+		padding: 0.34em 0.6em;
+	}
+	.dsheet :global(.plink:hover) {
+		transform: translate(-2px, -2px);
+		box-shadow: 5px 5px 0 #171310;
+	}
+	.dsheet :global(.plink-chip) {
+		width: 0.95rem;
+		height: 0.95rem;
+		border-radius: 4px;
+		background: var(--brand, #5bb8e8);
+		border: 2px solid #171310;
+		transform: rotate(-4deg);
+	}
+	.dsheet :global(.plink-arrow) {
+		color: color-mix(in srgb, #171310 42%, transparent);
+	}
+	.dsheet :global(.ds-desc) {
+		margin: 0.9rem 0 0;
+		font-size: 1rem;
+		line-height: 1.9;
+		white-space: pre-wrap;
+		word-break: break-word;
+		color: color-mix(in srgb, #171310 82%, transparent);
+	}
+	.dsheet :global(.ds-bar) {
+		margin-top: 1.6rem;
+	}
+	.dsheet :global(.ds-like) {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-weight: 800;
+		font-size: 0.9rem;
+		color: #171310;
+		background: #fff;
+		border: 3px solid #171310;
+		border-radius: 11px;
+		box-shadow: 4px 4px 0 #171310;
+		padding: 0.45em 0.9em;
+		cursor: pointer;
+	}
+	.dsheet :global(.ds-like:hover) {
+		transform: translate(-2px, -2px);
+		box-shadow: 6px 6px 0 #171310;
+	}
+	.dsheet :global(.ds-like .ds-heart) {
+		color: color-mix(in srgb, #171310 30%, transparent);
+		font-size: 1.05rem;
+	}
+	.dsheet :global(.ds-like.is-liked) {
+		background: #f39fc5;
+	}
+	.dsheet :global(.ds-like.is-liked .ds-heart) {
+		color: #d6336c;
+	}
+	.dsheet :global(.ds-comments) {
+		margin-top: 2rem;
+		border-top: 3px solid #171310;
+		padding-top: 1.6rem;
+	}
+	.dsheet :global(.ds-ctitle) {
+		margin: 0 0 1.2rem;
+		font-weight: 900;
+		font-size: 1.15rem;
+	}
+	.dsheet :global(.ds-ctitle span) {
+		font-family: var(--font-mono);
+		font-size: 0.82rem;
+		color: color-mix(in srgb, #171310 40%, transparent);
+	}
+	.dsheet :global(.ds-cinput) {
+		width: 100%;
+		box-sizing: border-box;
+		font: inherit;
+		font-size: 0.92rem;
+		line-height: 1.7;
+		color: #171310;
+		background: #fff;
+		border: 3px solid #171310;
+		border-radius: 10px;
+		padding: 0.65em 0.8em;
+		resize: vertical;
+	}
+	.dsheet :global(.ds-cinput:focus) {
+		outline: none;
+		box-shadow: 4px 4px 0 #86c15c;
+	}
+	.dsheet :global(.ds-cfoot) {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 1rem;
+		margin-top: 0.6rem;
+	}
+	.dsheet :global(.ds-cerr) {
+		margin-right: auto;
+		font-size: 0.8rem;
+		font-weight: 700;
+		color: #c0392b;
+	}
+	.dsheet :global(.ds-cpost) {
+		font: inherit;
+		font-weight: 800;
+		font-size: 0.85rem;
+		color: #fef9ed;
+		background: #171310;
+		border: 3px solid #171310;
+		border-radius: 10px;
+		box-shadow: 4px 4px 0 #86c15c;
+		padding: 0.45em 1.1em;
+		cursor: pointer;
+	}
+	.dsheet :global(.ds-cpost:disabled) {
+		opacity: 0.6;
+	}
+	.dsheet :global(.ds-clogin) {
+		margin: 0 0 1.6rem;
+		font-size: 0.9rem;
+		color: color-mix(in srgb, #171310 60%, transparent);
+	}
+	.dsheet :global(.ds-clogin a) {
+		color: #171310;
+		font-weight: 800;
+		text-decoration: underline;
+		text-underline-offset: 3px;
+		text-decoration-color: #86c15c;
+		text-decoration-thickness: 2px;
+	}
+	.dsheet :global(.ds-clist) {
+		list-style: none;
+		margin: 1.6rem 0 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 1.3rem;
+	}
+	.dsheet :global(.ds-citem) {
+		display: flex;
+		gap: 0.75rem;
+	}
+	.dsheet :global(.ds-cava-link) {
+		flex-shrink: 0;
+		line-height: 0;
+	}
+	.dsheet :global(.ds-cava) {
+		width: 34px;
+		height: 34px;
+		object-fit: cover;
+		display: block;
+		border: 2px solid #171310;
+		border-radius: 8px;
+		background: #fff;
+	}
+	.dsheet :global(.ds-cava--fb) {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		font-weight: 900;
+		font-size: 0.88rem;
+		color: #171310;
+		background: #5bb8e8;
+	}
+	.dsheet :global(.ds-cmeta) {
+		margin: 0 0 0.3rem;
+		display: flex;
+		align-items: baseline;
+		gap: 0.55rem;
+	}
+	.dsheet :global(.ds-cname) {
+		font-weight: 800;
+		font-size: 0.88rem;
+		color: #171310;
+		text-decoration: none;
+	}
+	.dsheet :global(.ds-ctime) {
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		color: color-mix(in srgb, #171310 40%, transparent);
+	}
+	.dsheet :global(.ds-ctext) {
+		margin: 0;
+		font-size: 0.92rem;
+		line-height: 1.7;
+		white-space: pre-wrap;
+		word-break: break-word;
+		color: #171310;
+	}
+	.dsheet :global(.ds-cempty) {
+		margin: 1.2rem 0 0;
+		font-size: 0.88rem;
+		color: color-mix(in srgb, #171310 40%, transparent);
 	}
 
 	.detail-top {

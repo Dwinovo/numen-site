@@ -6,7 +6,7 @@
  *   第一幕 · 囚 — 3px 墨线沿四边依次画出一个"聊天框"粗线框，前两行宣言在框内升起，
  *              光标在句尾闪烁——大模型被困住的样子。
  *   第二幕 · 破 — 四条粗边框向四个方向炸出屏幕，被困的两行退淡，
- *              「Numen 给它一个身体。」垫草绿色块、以更大的尺度落地；
+ *              「Numen 给他一个身体。」垫草绿色块、以更大的尺度落地；
  *              同一时刻，世界（游戏实录全景）第一次在粗边框相框里显影。
  *   第三幕 · 随 — 竖排「言出法随」在右缘逐字浮现并缓慢上移（视差），
  *              正文两句先后升起收束。
@@ -46,14 +46,14 @@ import world from '../assets/landscape-caves-cliffs-mountains.png';
 					></span
 				>
 			</span>
-			<span class="line-mask free-mask"><span class="line l3">Numen 给它一个身体。</span></span>
+			<span class="line-mask free-mask"><span class="line l3">Numen 给他一个身体。</span></span>
 		</h2>
 
 		<p class="lede">
 			<span class="lede-a"
 				>一个遵守游戏规则的真实假玩家：会感知地形，会查询配方，会规划路线；会挖矿、建造、战斗、看家。</span
 			>
-			<span class="lede-b">你说一句话，它便在这个世界里真实地发生。</span>
+			<span class="lede-b">你说一句话，他便在这个世界里真实地发生。</span>
 		</p>
 	</div>
 </section>
@@ -113,12 +113,12 @@ import world from '../assets/landscape-caves-cliffs-mountains.png';
 		will-change: transform;
 	}
 
-	/* 极轻的米白薄纱：只给文字兜一点底，不糊灰——画面直接展示 */
+	/* 一丝米白薄纱：仅给左侧文字兜极浅一点底，不糊灰——画面尽量直给 */
 	.world-frame::after {
 		content: '';
 		position: absolute;
 		inset: 0;
-		background: rgba(254, 249, 237, 0.12);
+		background: rgba(254, 249, 237, 0.04);
 	}
 
 	.inner {
@@ -261,7 +261,7 @@ import world from '../assets/landscape-caves-cliffs-mountains.png';
 		margin-top: 1.1em;
 	}
 
-	/* ---------- 竖排铭文：言出法随（ink 6% 水印） ---------- */
+	/* ---------- 竖排铭文：言出法随（米白 + 墨黑硬阴影，压在深图上跳出来） ---------- */
 	.glyph-rail {
 		position: absolute;
 		inset-block: 0;
@@ -278,8 +278,9 @@ import world from '../assets/landscape-caves-cliffs-mountains.png';
 		font-size: clamp(6.5rem, 19vh, 16rem);
 		line-height: 1;
 		letter-spacing: 0.08em;
-		color: var(--ink);
-		opacity: 0.06;
+		color: var(--cream);
+		opacity: 0.88;
+		text-shadow: 5px 5px 0 var(--ink);
 		will-change: transform;
 	}
 
@@ -378,7 +379,7 @@ import world from '../assets/landscape-caves-cliffs-mountains.png';
 					{ clipPath: 'inset(46% 0% 46% 0%)', autoAlpha: 0.66, duration: 0.3, ease: 'power2.out' },
 					3.72
 				)
-				.to(q('.world'), { clipPath: 'inset(0% 0% 0% 0%)', autoAlpha: 0.92, duration: 1.85, ease: 'power2.out' }, 4.1)
+				.to(q('.world'), { clipPath: 'inset(0% 0% 0% 0%)', autoAlpha: 1, duration: 1.85, ease: 'power2.out' }, 4.1)
 				.fromTo(q('.world-img'), { scale: 1.12 }, { scale: 1.0, duration: 2.1, ease: 'power2.out' }, 3.72)
 				/* 显影之后不许静止：极缓慢的呼吸漂移（ease none），幅度极小 */
 				.to(q('.world-img'), { scale: 1.02, yPercent: -0.6, duration: 1.85, ease: 'none' }, 5.65);

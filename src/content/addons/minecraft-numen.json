@@ -1,0 +1,8 @@
+{
+	"name": "minecraft-numen",
+	"type": "模组",
+	"order": 1,
+	"author": "Dwinovo",
+	"description": "Numen 生态的核心模组，为 Minecraft 世界接入 AI 同伴的运行时。它是这一切的身体所在——同伴在这里被赋形，在这个世界里行动。",
+	"links": [{ "href": "https://github.com/Dwinovo/minecraft-numen" }]
+}

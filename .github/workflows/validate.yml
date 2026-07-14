@@ -1,0 +1,21 @@
+name: validate
+
+# 任何 PR / 推送都先构建一遍。附属数据是内容集合（src/content/addons/*.json），
+# schema 在 src/content.config.ts 里写死——字段缺失、链接非法、JSON 格式错，
+# 都会让 `astro build` 失败，CI 直接红，投稿在合并前就被拦下。
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build

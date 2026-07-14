@@ -1,36 +1,37 @@
 ---
-// 开发者文档 —— 面向 numen-api 开发者
+// 开发者文档 —— 面向 numen-api 开发者，NeoForge 1.21.1 贯穿示例。
 // 满宽布局：左侧固定目录侧栏（scroll-spy 高亮） + 右侧正文。
-// 内容以 Dwinovo/numen-api 的 1.21.1 分支源码为准（README/wiki 无独立开发者指南，
-// 真契约在源码 Javadoc 里）。代码片段用常量字符串渲染，避开 Astro 花括号解析。
+// 内容以 Dwinovo/numen-api 的 1.21.1 分支源码 + README + numen-maven 实际制品为准。
+// 代码片段用常量字符串渲染，避开 Astro 花括号解析。
 import Subpage from '../layouts/Subpage.astro';
 
 const REPO = 'https://github.com/Dwinovo/numen-api';
+const MAVEN = 'https://github.com/Dwinovo/numen-maven';
 const SRC = 'https://github.com/Dwinovo/numen-api/tree/1.21.1/common/src/main/java/com/dwinovo/numen';
 
-// 目录分组 —— 把 15 章按真实学习路径归到 5 个阶段，给侧栏骨架和节奏。
+// 目录分组 —— 按真实学习路径归到 5 个阶段，给侧栏骨架和节奏。
 // 章号 01..15 在组间连续累加（与正文里的 sec-no 一一对应）。
 const tocGroups = [
 	{ group: '起步', color: 'var(--grass)', items: [
 		{ id: 'overview', label: '概览与架构' },
 		{ id: 'requirements', label: '环境要求' },
-		{ id: 'gradle', label: '引入依赖' },
+		{ id: 'gradle', label: 'NeoForge 接入' },
 	]},
 	{ group: '核心模型', color: 'var(--lake)', items: [
 		{ id: 'concepts', label: '核心概念' },
-		{ id: 'surface', label: '公开 API 表面' },
+		{ id: 'surface', label: '三扇门（API 表面）' },
 	]},
-	{ group: '写扩展', color: 'var(--orange)', items: [
+	{ group: '写工具', color: 'var(--orange)', items: [
 		{ id: 'tool', label: '写一个工具' },
-		{ id: 'register', label: '注册工具' },
+		{ id: 'args', label: '参数与上下文' },
+		{ id: 'register', label: '注册与调用' },
 		{ id: 'result', label: '工具结果' },
-		{ id: 'gateway', label: '入站消息' },
 		{ id: 'player', label: '同伴身体' },
 	]},
 	{ group: '进阶', color: 'var(--sakura)', items: [
-		{ id: 'skill', label: '写一个 Skill' },
-		{ id: 'mcp', label: '接 MCP' },
-		{ id: 'reference-impl', label: '参考实现' },
+		{ id: 'gateway', label: '门一·入站消息' },
+		{ id: 'actuator', label: '门二·外部大脑' },
+		{ id: 'skill', label: 'Skill（零代码）' },
 	]},
 	{ group: '参考', color: 'var(--ink)', items: [
 		{ id: 'cheatsheet', label: 'API 速查' },
@@ -46,87 +47,190 @@ const tocGroupsNumbered = tocGroups.map((g) => ({
 }));
 
 const gradleRepo = `repositories {
-    maven { url 'https://raw.githubusercontent.com/Dwinovo/numen-maven/main' }
+    // Numen 制品仓库：GitHub raw 当静态 Maven，大陆可直连、无需账号。
+    maven { url = 'https://raw.githubusercontent.com/Dwinovo/numen-maven/main' }
 }`;
 
-const gradleFabric = `// Fabric (Loom) — 编译用 slim :api 包，运行用完整引擎包
-configurations.all { resolutionStrategy.cacheChangingModulesFor 0, 'seconds' }
+const gradleNeo = `// build.gradle —— 一个 NeoForge 1.21.1 mod（ModDevGradle）
+plugins {
+    // https://projects.neoforged.net/neoforged/moddevgradle 查新版本
+    id 'net.neoforged.moddev' version '2.0.141'
+}
+
+neoForge {
+    version = '21.1.233'   // NeoForge for MC 1.21.1（numen-api 本分支就构建于此）
+}
+
+// :api 是 SNAPSHOT，每次发布带新时间戳 —— 关掉缓存才能拿到最新
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
 
 dependencies {
-    modCompileOnlyApi 'com.dwinovo.numen:numen-api-fabric-1.21.1:0.0.1-SNAPSHOT:api'
-    modRuntimeOnly    'com.dwinovo.numen:numen-api-fabric-1.21.1:0.0.1-SNAPSHOT'
-    // 若要打成单文件（像 Create 内嵌 Flywheel），再 include(...) 完整包
+    // 只需 compileOnly 精简版 :api jar（classifier = api，仅含公开接口）。
+    // 运行时的完整引擎由玩家安装的 Numen mod 提供 —— 你的 mod 不打包任何引擎代码。
+    compileOnly 'com.dwinovo.numen:numen-api-neoforge-1.21.1:0.0.2-SNAPSHOT:api'
 }`;
 
-const gradleNeo = `// NeoForge (ModDevGradle)
-dependencies {
-    compileOnly 'com.dwinovo.numen:numen-api-neoforge-1.21.1:0.0.1-SNAPSHOT:api'
-    runtimeOnly 'com.dwinovo.numen:numen-api-neoforge-1.21.1:0.0.1-SNAPSHOT'
-    // 单文件分发：jarJar(implementation(...)) 完整包
+const modClass = `// src/main/java/com/example/companiontools/CompanionTools.java
+package com.example.companiontools;
+
+import com.dwinovo.numen.agent.tool.ToolRegistry;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.common.Mod;
+
+@Mod(CompanionTools.MODID)
+public final class CompanionTools {
+    public static final String MODID = "companion_tools";
+
+    // NeoForge 1.21.1：mod 事件总线由构造器注入
+    public CompanionTools(IEventBus modBus) {
+        // 引擎跑在【主人的客户端】；ToolRegistry 是静态全局表，
+        // mod 构造期注册一次即可。重名会抛 IllegalStateException（不静默替换）。
+        ToolRegistry.register(new AnnounceTool());
+    }
 }`;
 
 const toolIface = `public interface NumenTool {
     // 模型看到的工具名，snake_case
     String name();
 
-    // 给模型的描述 —— 决定模型能否正确选中此工具的最大杠杆
+    // 给模型的描述 —— 决定模型能否正确选中此工具的最大杠杆：
+    // 讲清楚干什么、何时用（何时别用）、每个非显然参数的含义、注意事项
     String description();
 
     // 参数的 JSON Schema（OpenAI 工具参数方言）
     Map<String, Object> parameterSchema();
 
-    // 执行一次调用：现在干、稍后干、客户端干、服务端干、丢给外部服务干都行，
-    // 结果就绪时通过 ToolCall.complete(...) 回报
+    // 执行一次调用。现在干、稍后干、客户端干、丢给外部服务干都行；
+    // 结果就绪时通过 ToolCall.complete(...) 回报。契约里刻意没有任何
+    // Minecraft / 服务端 / 任务队列的概念 —— 怎么干完全是工具自己的事。
     void invoke(ToolCall call);
 }`;
 
-const toolExample = `// 示例（基于真实契约合成，非仓库原文）：一个把消息发回 QQ 的出站工具
-public final class SendQqMessageTool implements NumenTool {
-    public String name() { return "send_qq_message"; }
+const toolExample = `// AnnounceTool.java —— 一个纯 API 工具：把同伴想说的话推给外部服务，做完 complete。
+// 演示最干净的一类工具：不碰 Minecraft 世界，只做外部 I/O（桥接/通知/Web API）。
+package com.example.companiontools;
 
-    public String description() {
-        return "Send a QQ message back to the requester.";
+import com.dwinovo.numen.agent.tool.NumenTool;
+import com.dwinovo.numen.agent.tool.ToolCall;
+import com.dwinovo.numen.task.TaskResult;
+import com.google.gson.JsonObject;
+import java.util.List;
+import java.util.Map;
+
+public final class AnnounceTool implements NumenTool {
+
+    @Override public String name() { return "announce"; }
+
+    @Override public String description() {
+        return "Post a short message to the owner's external chat. "
+             + "Use when you want to tell the owner something out-of-game.";
     }
 
-    public Map<String, Object> parameterSchema() {
+    @Override public Map<String, Object> parameterSchema() {
         return Map.of(
             "type", "object",
             "properties", Map.of(
-                "message", Map.of("type", "string"),
-                "user_id", Map.of("type", "integer")
+                "text", Map.of("type", "string", "description", "what to say")
             ),
-            "required", List.of("message")
+            "required", List.of("text")
         );
     }
 
-    public void invoke(ToolCall call) {
-        JsonObject args = call.args();      // 解析后的参数（非法 JSON 抛异常）
-        // ... 干活：通过 websocket 发出去 ...
-        call.complete(TaskResult.ok("sent").toJson());   // 唯一的"完成"动词
+    @Override public void invoke(ToolCall call) {
+        JsonObject args = call.args();            // 非法 JSON → IllegalArgumentException
+        String text = args.get("text").getAsString();
+
+        // —— 想怎么干就怎么干：这里同步 POST 给一个外部 webhook；
+        //    也可以切线程 / 丢消息队列，稍后再 complete。 ——
+        boolean sent = MyWebhook.post(text);
+
+        // 唯一的“完成”动词，恰好调用一次。参数即喂回模型的 role:tool 内容。
+        call.complete(sent
+            ? TaskResult.ok("delivered").toJson()
+            : TaskResult.fail("webhook unreachable").toJson());
     }
 }`;
 
-const registerCode = `// 在模组初始化时注册一次（重名抛 IllegalStateException，不静默替换）
-ToolRegistry.register(new SendQqMessageTool());`;
+const argsCode = `@Override public void invoke(ToolCall call) {
+    call.id();            // 模型的 tool_call id，原样回带到结果消息
+    call.toolName();      // "announce"
+    call.rawArgs();       // 模型原样吐出的参数 JSON 串
+    JsonObject a = call.args();   // 解析后；非法 JSON 抛 IllegalArgumentException
+    call.ctx();           // 客户端上下文（下方说明）；身体不在视距内时其 entity 可能为 null
 
-const resultCode = `TaskResult.ok("拿到 64 个粗铁");
-TaskResult.ok("已放进箱子", Map.of("count", 64, "slot", 3));
-TaskResult.fail("背包满了");
-TaskResult.timeout("寻路超时");
+    // numen-api 自带一组参数读取器（agent.tool.ToolArgs，公开），省去手写校验：
+    int qty    = ToolArgs.requireInt(a, "count", 1, 64);   // 必填 + clamp 到 [1,64]
+    Item item  = ToolArgs.requireItem(a, "item");          // "minecraft:iron_ingot" → Item
+    BlockPos p = ToolArgs.optionalPos(a);                  // x/y/z 全给或全不给；缺一个报错
 
-// 交回引擎前序列化成 LLM 读到的 role:tool 消息
-String json = TaskResult.ok("done").toJson();`;
-
-const gatewayCode = `// 从聊天 GUI 之外，把一条消息喂给某个同伴（唯一的入站公开入口）
-// 必须在【主人的客户端进程】里调用；任意线程安全
-boolean queued = NumenGateway.enqueue(companion.getUUID(), "把家里的小麦收了");
-// message 为空、或该同伴本会话从未被召唤 → 返回 false`;
-
-const playerCode = `NumenPlayer body = NumenPlayer.findByUuid(server, companionUuid);
-if (body != null && body.isOwnedByPlayer(ownerUuid)) {   // 跨维度安全的归属判断
-    boolean hasPick = body.ensureInInventory(Items.DIAMOND_PICKAXE);
-    ServerPlayer owner = body.resolveOwnerPlayer();       // 离线为 null
+    // 以上都在非法输入时抛 IllegalArgumentException，
+    // 引擎会转成 success:false 的结果交回模型，让它下一轮自我纠正。
 }`;
+
+const lifecycleCode = `// 引擎（客户端 EntityAgentLoop）如何调用你的工具 —— 这段你不用写，看清链路即可：
+//
+// 1. 每次请求，引擎把 ToolRegistry.all()（保序）作为工具清单喂给模型
+// 2. 模型回一个 tool_call：{ id:"call_7", name:"announce", arguments:"{\\"text\\":\\"hi\\"}" }
+// 3. 引擎 resolve("announce") 找到你的实例（精确匹配，大小写漂移兜底）
+// 4. 引擎构造 ToolCall(id, name, rawArgs, ctx, sink)，调用 tool.invoke(call)
+// 5. 你在 invoke 里干活，随时随线程 call.complete(resultJson)
+// 6. 引擎把 resultJson 作为 role:tool 消息（带回同一个 id）拼进对话，交给模型下一步`;
+
+const registerCode = `// 在模组初始化时注册一次（NeoForge：mod 构造器内）。
+ToolRegistry.register(new AnnounceTool());
+
+// 注册表要点：
+//  · 静态全局单例 —— 工具集是“部署级”决策，不是 per-entity
+//  · 保留插入顺序 → 模型每次看到的工具顺序稳定，利于后端 prompt 缓存
+//  · register 遇重名抛 IllegalStateException（暴露接线 bug，不静默覆盖）
+//  · resolve(name) 精确匹配优先，再忽略大小写兜底（容忍 Move_to / move_to 漂移）`;
+
+const resultCode = `TaskResult.ok("拿到 64 个铁锭");
+TaskResult.ok("已放进箱子", Map.of("count", 64, "slot", 3));   // 附结构化 data
+TaskResult.fail("背包满了");
+TaskResult.fail("路被挡住", Map.of("blocked_at", "100,64,-12"));
+TaskResult.timeout("寻路超时");        // success=false, timed_out=true
+TaskResult.cancelled("被主人打断");    // success=false, interrupted=true
+
+// 交回引擎前序列化成模型读到的 role:tool 内容：
+String json = TaskResult.ok("done").toJson();
+// => {"success":true,"message":"done"}
+// data 里 Number/Boolean 原样入 JSON，其余值 toString()；空 data 与 false 标志位省略`;
+
+const playerCode = `// NumenPlayer 是服务端假玩家（extends ServerPlayer）——
+// 只有当你的工具把活儿送到【服务端】执行（自定义网络包）时才拿它。
+NumenPlayer body = NumenPlayer.findByUuid(server, companionUuid);   // 未加载返回 null
+if (body != null && body.isOwnedByPlayer(ownerUuid)) {   // 跨维度安全：纯 UUID 比较
+    boolean hasPick = body.ensureInInventory(Items.DIAMOND_PICKAXE);  // 是否在物品栏
+    body.holdInHand(slot);                     // 正确切主手（勿用 setItemInHand 覆盖）
+    ServerPlayer owner = body.resolveOwnerPlayer();      // 主人离线为 null
+}`;
+
+const gatewayCode = `import com.dwinovo.numen.api.NumenGateway;
+
+// 门一·入站：从聊天 GUI 之外，把一条消息【原样】喂给某同伴的内置大脑。
+// 必须在【主人的客户端进程】里调用；任意线程安全（内部切客户端主线程）。
+boolean queued = NumenGateway.enqueue(companion.getUUID(), "有人在 QQ 说：去挖一组铁");
+// 消息为空、或该同伴本局从未被召唤 → 返回 false`;
+
+const actuatorCode = `import com.dwinovo.numen.api.NumenActuator;
+import java.util.UUID;
+
+// 门二·外部大脑：绕过内置 LLM，由外部智能体（如一个 MCP 服务器）直接驱动身体。
+// 契约：acquire → invoke* → release；三者都返回 CompletableFuture，任意线程可调。
+NumenActuator.companions().thenAccept(fleet -> {          // 主人当前在世的同伴列表
+    UUID body = fleet.get(0).uuid();                      // Companion(uuid, name)
+    NumenActuator.acquire(body)                           // 暂停内置大脑、腾出身体
+        .thenCompose(ok ->
+            NumenActuator.invoke(body, "move_to",         // 无头调用任意已注册工具
+                "{\\"x\\":100,\\"y\\":64,\\"z\\":-200}"))
+        .thenAccept(resultJson -> handle(resultJson))     // 一个 TaskResult JSON 串
+        .whenComplete((r, e) -> NumenActuator.release(body));  // 始终交还身体
+});
+// 每次调用都指向一个 UUID，各身体并行跑任务：一个外部大脑可 acquire 一支“舰队”。
+// 失败（未知工具 / 参数错 / 工具抛异常）都以 TaskResult.fail 的 JSON 返回，future 不异常完成。`;
 
 const skillMd = `---
 name: 打末影龙
@@ -135,12 +239,12 @@ description: 从零到击杀末影龙的完整流程。
 
 1. 备齐弓、箭、床、黑曜石……
 2. 找到末地传送门要塞……
-（正文就是给模型看的工作流，纯 Markdown，零代码）`;
+（正文就是给模型看的工作流，纯 Markdown，零 Java）`;
 ---
 
 <Subpage
-	title="开发者文档 — Numen"
-	description="面向 numen-api 开发者：引入依赖、写工具、注册、入站消息、参考实现。"
+	title="开发者文档 — numen-api"
+	description="面向 numen-api 开发者：NeoForge 1.21.1 接入、写工具、注册、入站消息、外部大脑（MCP）。"
 	current="docs"
 >
 	<div class="docs">
@@ -170,88 +274,98 @@ description: 从零到击杀末影龙的完整流程。
 		<!-- ============ 右侧正文 ============ -->
 		<main class="docs-main">
 			<header class="docs-head">
-				<h1 class="docs-h1">开发者文档</h1>
+				<h1 class="docs-h1">numen-api 开发者文档</h1>
 				<p class="docs-lede">
-					给 Numen 写工具、接一座桥、扩展一具身体。这一页把分散在
-					<a href={REPO} target="_blank" rel="noopener">numen-api</a> 源码、
-					<a href="https://github.com/Dwinovo/numen-maven" target="_blank" rel="noopener">numen-maven</a> 与
-					<a href="https://github.com/Dwinovo/numen-qq-mcp" target="_blank" rel="noopener">numen-qq-mcp</a>
-					三处的接入事实第一次整合起来。契约以 <code>1.21.1</code> 分支源码为准。
+					<a href={REPO} target="_blank" rel="noopener">numen-api</a>
+					是驱动 Numen AI 同伴的引擎，也是插件对接的<strong>稳定公共 API</strong>。这一页只讲这一个项目：如何搭一个
+					<strong>NeoForge 1.21.1</strong> mod、通过
+					<a href={MAVEN} target="_blank" rel="noopener">numen-maven</a>
+					加依赖、实现并注册一个工具、以及引擎如何调用它。契约以
+					<code>1.21.1</code> 分支源码为准。
 				</p>
 			</header>
 
 			<section id="overview" class="doc-sec">
 				<h2 class="doc-h2"><span class="sec-no">01</span>概览与架构</h2>
 				<p>
-					Numen 是一套"让大模型真正活在 Minecraft 里"的 AI 引擎（harness）。它给模型套上一具在服务端按原生玩家规则行动的身体，把感知、行动、结果反馈接回模型。
-					<strong>numen-api 是这套引擎的公开集成层——它自己不带任何工具</strong>，能力由上层的工具包（如 numen-core）和集成（如 numen-qq-mcp）叠加。
+					numen-api 是一套“让大模型真正活在 Minecraft 里”的引擎（harness）。它给模型套上一具在服务端按原生玩家规则行动的身体，把感知、行动、结果反馈接回模型。
+					<strong>引擎自身不带任何工具</strong>——能力由上层工具包（<a href="https://github.com/Dwinovo/minecraft-numen" target="_blank" rel="noopener">numen-core / Numen mod</a>）和集成（桥、MCP）在其上叠加。你就是那个叠加能力的人。
 				</p>
 				<div class="doc-grid">
-					<div class="doc-card"><span class="dc-k">身体 = 真玩家</span>服务端假玩家（<code>ServerPlayer</code>），所有动作走原生玩家代码路径，天生兼容红石、生物 AI、容器与第三方模组。</div>
-					<div class="doc-card"><span class="dc-k">眼睛 = 感知</span>范围内方块/实体扫描、配方查询、单块检视，甚至能 x-ray 读出机器持有的物品/流体/能量而不开 GUI。</div>
-					<div class="doc-card"><span class="dc-k">手 = 行动</span>移动、挖掘、放置、战斗（原生近战 + 弓）、操作容器/机器 GUI、管理物品栏、定位结构与生物群系。</div>
-					<div class="doc-card"><span class="dc-k">反馈循环</span>每次工具结果（成功或失败）都写成一行"教模型 Minecraft 规则"的文字。</div>
+					<div class="doc-card"><span class="dc-k">身体 = 真玩家</span>同伴是服务端假玩家 <code>NumenPlayer extends ServerPlayer</code>，所有动作走原生玩家代码路径，天生兼容红石、生物 AI、容器与第三方模组。</div>
+					<div class="doc-card"><span class="dc-k">大脑 = 客户端</span>对话回路 <code>EntityAgentLoop</code> 跑在<strong>玩家自己的客户端</strong>、用玩家自己的 API key，服务端不装、不烧钱。</div>
+					<div class="doc-card"><span class="dc-k">工具 = 手/眼</span>模型能调用的动作单元。numen-api 只定义 <code>NumenTool</code> 契约并调度它，工具本体由你或工具包提供。</div>
+					<div class="doc-card"><span class="dc-k">反馈循环</span>每次工具结果（<code>TaskResult</code>）都写成一行“教模型 Minecraft 规则”的文字，拼回对话。</div>
 				</div>
 				<p class="doc-callout">
 					<strong>引擎是纯调度器，不是执行器。</strong>它只负责把工具展示给 LLM、投递调用、把结果路由回对话。
-					工具怎么干活（发服务端包、开线程、调外部服务）完全是你的事——有且只有一个"完成"动词 <code>complete()</code>。
+					工具怎么干活（发服务端包、开线程、调外部服务）完全是你的事——有且只有一个“完成”动词 <code>ToolCall.complete()</code>。
 				</p>
-				<p class="doc-note">运行模型：大脑跑在玩家自己的客户端、用玩家自己的 API key，服务端不装、不烧钱。零第三方运行时依赖（LLM 传输仅用 JDK <code>HttpClient</code> + Gson）。</p>
+				<p class="doc-note">零第三方运行时依赖：LLM 传输仅用 JDK 自带 <code>java.net.http.HttpClient</code> + Gson（Gson 已在 MC 类路径上）。兼容 OpenAI 接口的模型接入内建 DeepSeek / 通义 / Kimi / GLM / 豆包 / MiniMax / SiliconFlow / OpenAI 等。</p>
 			</section>
 
 			<section id="requirements" class="doc-sec">
 				<h2 class="doc-h2"><span class="sec-no">02</span>环境要求</h2>
 				<ul class="doc-list">
 					<li><b>Minecraft</b> 1.21.1</li>
-					<li><b>加载器</b> Fabric 或 NeoForge（Fabric 需额外装 Fabric API）</li>
-					<li><b>Java</b> 21（随游戏）</li>
-					<li><b>Numen 本体</b> 引擎 0.0.4+（含 <code>NumenGateway</code>）</li>
+					<li><b>加载器</b> 本页示例用 NeoForge <code>21.1.233</code>（loader 范围 <code>[4,)</code>）；也发布 Fabric / Forge 制品</li>
+					<li><b>Java</b> 21</li>
+					<li><b>构建</b> ModDevGradle <code>net.neoforged.moddev</code> 2.0.141（MultiLoader-Template 布局：<code>common</code> + 各加载器子项目）</li>
+					<li><b>运行时引擎</b> 由玩家安装的 <b>Numen mod</b> 提供（它把完整引擎打包在身上）——你的 mod 只 <code>compileOnly</code> 精简 API，不携带引擎</li>
 				</ul>
 				<p class="doc-note">
-					注意两套版本号别混淆：Numen <b>模组</b>版本（qq-mcp 要求 0.0.4+）与 Maven <b>制品</b>版本（<code>0.0.1-SNAPSHOT</code>）是不同编号。模组装在<b>玩家客户端</b>（同伴由主人客户端驱动）。
+					engine 跑在<b>主人的客户端进程</b>，同伴由主人客户端驱动。别把两套版本号混淆：Numen <b>模组</b>版本、numen-api Maven <b>制品</b>版本（本分支 <code>0.0.2-SNAPSHOT</code>）是不同编号。mod id 是 <code>numen_api</code>。
 				</p>
 			</section>
 
 			<section id="gradle" class="doc-sec">
-				<h2 class="doc-h2"><span class="sec-no">03</span>引入依赖</h2>
-				<p>制品发布在 numen-maven 静态仓库。每个版本每个加载器发<b>两个制品</b>：<code>:api</code> 瘦包（只有公开接口，编译用）和完整引擎包（运行用）。</p>
+				<h2 class="doc-h2"><span class="sec-no">03</span>NeoForge 接入</h2>
+				<p>制品发布在 <a href={MAVEN} target="_blank" rel="noopener">numen-maven</a> 静态仓库（GitHub raw 当 Maven 用）。先加仓库：</p>
 				<pre class="doc-code"><code>{gradleRepo}</code></pre>
-				<pre class="doc-code"><code>{gradleFabric}</code></pre>
+				<p>再在一个 NeoForge 1.21.1 mod 里 <code>compileOnly</code> 精简 <code>:api</code> jar：</p>
 				<pre class="doc-code"><code>{gradleNeo}</code></pre>
 				<p class="doc-note">
-					坐标 = <code>com.dwinovo.numen:numen-api-&lt;loader&gt;-&lt;mcversion&gt;:&lt;engineVersion&gt;</code>，MC 版本烤进 artifactId。
-					<b>完整引擎运行时必须在场</b>（<code>:api</code> 只有接口）：要么 <code>include</code>/<code>jarJar</code> 进你的包，要么让玩家把 numen-api 作为依赖装上。其他 MC 版本把版本号替换即可，以 maven 仓库实际存在的目录为准。
+					坐标 = <code>com.dwinovo.numen:numen-api-&lt;loader&gt;-&lt;mcversion&gt;:&lt;version&gt;:api</code>，加载器与 MC 版本都烤进 artifactId。
+					换 Fabric / Forge 只需把 <code>neoforge</code> 换成 <code>fabric</code> / <code>forge</code>；换 MC 版本替换版本号即可，<b>以 numen-maven 仓库实际存在的目录/版本为准</b>（当前 <code>neoforge-1.21.1</code> 已发布 <code>0.0.1-SNAPSHOT</code>、<code>0.0.2-SNAPSHOT</code>）。
+				</p>
+				<p class="doc-warn">
+					<b>只用 <code>compileOnly</code>，不要打包引擎。</b><code>:api</code> jar 只含公开接口；完整引擎在运行时由玩家安装的 Numen mod 提供。请在你的 <code>neoforge.mods.toml</code> 里声明对 <code>numen_api</code> 的依赖，确保加载顺序在引擎之后。
 				</p>
 			</section>
 
 			<section id="concepts" class="doc-sec">
 				<h2 class="doc-h2"><span class="sec-no">04</span>核心概念</h2>
 				<ul class="doc-list">
-					<li><b>假玩家</b>：<code>NumenPlayer extends ServerPlayer</code>，稳定的每同伴 UUID，走原生玩家交互/战斗路径。</li>
-					<li><b>感知 / 行动 / 记忆</b>：记忆跨存档持久化、过长自动压缩、记住用过的工作台/熔炉/箱子。</li>
-					<li><b>工具（Tool）= 手/眼</b>：模型能调用的动作单元。numen-api 定义契约，工具由工具包提供。</li>
-					<li><b>Skill = 教练</b>：<code>config/numen/skills/</code> 下的 Markdown 工作流，零代码，按需加载。</li>
-					<li><b>MCP = 连接器</b>：把某模组的内部世界结构化接进 AI 的感官和手。</li>
+					<li><b>同伴身体</b>：<code>NumenPlayer extends ServerPlayer</code>，稳定的每同伴 UUID，走原生玩家交互/战斗路径；由 <code>getUUID()</code> 取 UUID。</li>
+					<li><b>工具（Tool）</b>：模型能调用的动作单元。实现 <code>NumenTool</code> 四个方法、在 <code>ToolRegistry</code> 注册。</li>
+					<li><b>结果（TaskResult）</b>：工具交回 agent 循环的信封，序列化成模型读到的 <code>role:tool</code> 消息。</li>
+					<li><b>三扇门</b>：插件通过三个入口接触引擎——两扇给同伴喂输入（<code>NumenGateway</code> / <code>NumenActuator</code>），一扇教它新能力（<code>ToolRegistry.register</code>）。见下一节。</li>
+					<li><b>Skill</b>：<code>config/numen/skills/</code> 下的 Markdown 工作流，零代码、按需加载。</li>
 				</ul>
 			</section>
 
 			<section id="surface" class="doc-sec">
-				<h2 class="doc-h2"><span class="sec-no">05</span>公开 API 表面</h2>
-				<p>公开 API = 下面这几个包；其余一切、或标了 <code>@Internal</code> 的成员，都是内部实现，随时可能变。</p>
+				<h2 class="doc-h2"><span class="sec-no">05</span>三扇门（公开 API 表面）</h2>
+				<p>公开 API = 下面这几个包里、且未标 <code>@Internal</code> 的类型（沿用 Applied Energistics 2 的“<code>package-info</code> 声明公开”约定）。其余一切都是内部实现，随时可变。</p>
 				<div class="doc-table-wrap">
 					<table class="doc-table">
-						<thead><tr><th>包</th><th>公开内容</th><th>用途</th></tr></thead>
+						<thead><tr><th>包</th><th>公开类型</th><th>作用</th></tr></thead>
 						<tbody>
-							<tr><td><code>agent.tool</code></td><td><code>NumenTool</code> · <code>ToolCall</code> · <code>ToolRegistry</code></td><td>工具契约与注册</td></tr>
-							<tr><td><code>agent.tool.api</code></td><td><code>ToolContext</code></td><td>服务端工具构建 task 的调用上下文</td></tr>
-							<tr><td><code>task</code></td><td><code>TaskResult</code></td><td>工具回给 agent 循环的结果封装</td></tr>
-							<tr><td><code>entity</code></td><td><code>NumenPlayer</code></td><td>同伴身体</td></tr>
-							<tr><td><code>api</code></td><td><code>NumenGateway</code> · <code>@Internal</code></td><td>入站入口 + 内部标记</td></tr>
+							<tr><td><code>api</code></td><td><code>NumenGateway</code> · <code>NumenActuator</code></td><td>门一 / 门二：喂输入、驱动同伴</td></tr>
+							<tr><td><code>agent.tool</code></td><td><code>NumenTool</code> · <code>ToolCall</code> · <code>ToolRegistry</code> · <code>ToolArgs</code></td><td>门三：工具契约、注册、参数读取器</td></tr>
+							<tr><td><code>agent.tool.api</code></td><td><code>ToolContext</code></td><td>服务端工具构建 task 的单次调用上下文</td></tr>
+							<tr><td><code>task</code></td><td><code>TaskResult</code></td><td>工具回给 agent 循环的结果信封</td></tr>
+							<tr><td><code>entity</code></td><td><code>NumenPlayer</code></td><td>服务端同伴身体</td></tr>
 						</tbody>
 					</table>
 				</div>
+				<ul class="doc-list">
+					<li><b>门一 · <code>NumenGateway.enqueue</code></b>：把消息喂给同伴的<b>内置大脑</b>，由内置 LLM 决定怎么做（入站桥用它）。</li>
+					<li><b>门二 · <code>NumenActuator</code></b>：让<b>外部大脑</b>绕过内置 LLM，直接列工具、接管身体、调工具、读结果（MCP 服务器用它）。</li>
+					<li><b>门三 · <code>NumenTool</code> + <code>ToolRegistry.register</code></b>：教同伴一项新能力。</li>
+				</ul>
 				<p class="doc-warn">
-					<b>以源码为准：</b>numen-maven README 仍宣称公开 API 含 <code>@NumenAction</code> 注解 + <code>ToolSchema</code>，但源码里那套反射注解层<b>已被移除</b>。当前真实契约是直接实现 <code>NumenTool</code> 四个方法。另：<code>agent.skill</code> 整包是 <code>@Internal</code>——Skill 用 Markdown 写，不写 Java。
+					<b>没有注解层：</b>工具契约就是直接实现 <code>NumenTool</code> 的四个方法——numen-api 不提供 <code>@NumenAction</code> 之类的注解或反射作者层。numen-core 另提供可选的 <code>Schema</code> builder 与 <code>ServerNumenTool</code> 基类作便利糖，但<b>不属于 numen-api 契约</b>。另：<code>agent.skill</code> 整包为 <code>@Internal</code>——Skill 用 Markdown 编写，不写 Java。
 				</p>
 			</section>
 
@@ -259,69 +373,75 @@ description: 从零到击杀末影龙的完整流程。
 				<h2 class="doc-h2"><span class="sec-no">06</span>写一个工具</h2>
 				<p>契约就是四个方法，没有注解层。<code>parameterSchema()</code> 用 OpenAI 工具参数的 JSON Schema 方言。</p>
 				<pre class="doc-code"><code>{toolIface}</code></pre>
-				<p><code>ToolCall</code> 给工具的东西 + 唯一回报动词：<code>id()</code> · <code>toolName()</code> · <code>rawArgs()</code>（原样 JSON 串）· <code>args()</code>（解析后，非法抛 <code>IllegalArgumentException</code>）· <code>ctx()</code>（客户端句柄，实体可能为 null）· <code>complete(String)</code>。</p>
+				<p>把它接到第 03 节那个 NeoForge mod 上——一个最干净的纯 API 工具（只做外部 I/O，不碰世界）：</p>
 				<pre class="doc-code"><code>{toolExample}</code></pre>
-				<p class="doc-note">numen-core 提供了可选的 <code>Schema</code> builder 与 <code>ServerNumenTool</code> 基类作为便利糖，但<b>不属于 numen-api 契约</b>（numen-core 当前未开源）。</p>
+				<p class="doc-note"><code>description()</code> 是模型能否选对工具的最大杠杆，值得像写文档一样打磨；<code>parameterSchema()</code> 的返回是普通 <code>Map</code>，引擎序列化成 schema 交给模型。</p>
+			</section>
+
+			<section id="args" class="doc-sec">
+				<h2 class="doc-h2"><span class="sec-no">07</span>参数与上下文</h2>
+				<p><code>ToolCall</code> 是引擎交给 <code>invoke</code> 的全部东西 + 唯一回报动词。<code>args()</code> 返回 Gson 的 <code>JsonObject</code>；<code>complete(String)</code> 交回结果。</p>
+				<pre class="doc-code"><code>{argsCode}</code></pre>
+				<p class="doc-note">
+					<code>ctx()</code> 返回 <code>ClientToolContext</code>（客户端句柄，本身标了 <code>@Internal</code>，但它是公开 <code>invoke</code> 路径会递给你的那个内部类型）：其 <code>anchor()</code> 给出扫描/物品栏的中心实体，<b>身体不在视距内时 <code>entity</code> 可能为 null</b>，感知类工具须判空并返回干净失败而非 NPE。
+				</p>
+				<p class="doc-note"><b>驱动身体：</b>纯 I/O 工具在 <code>invoke</code> 里直接干活即可；要写会真正驱动同伴身体行动的工具，则自定义网络包把动作送到服务端、在服务端操作 <code>NumenPlayer</code>（见第 10 节）。</p>
 			</section>
 
 			<section id="register" class="doc-sec">
-				<h2 class="doc-h2"><span class="sec-no">07</span>注册工具</h2>
+				<h2 class="doc-h2"><span class="sec-no">08</span>注册与调用</h2>
 				<pre class="doc-code"><code>{registerCode}</code></pre>
-				<ul class="doc-list">
-					<li>在<b>模组初始化时</b>调用一次（per-loader 入口），之后只读。</li>
-					<li><b>静态全局单例</b>——工具集是"部署级"决策，不是 per-entity。</li>
-					<li>保留插入顺序 → 模型每次看到的工具顺序稳定，利于 prompt 缓存。</li>
-					<li><code>resolve(name)</code> 先精确后忽略大小写兜底，容忍模型的 <code>Move_to</code>/<code>move_to</code> 漂移。</li>
-				</ul>
+				<p>你写完注册就结束了。剩下的链路由引擎跑，无需你参与：</p>
+				<pre class="doc-code"><code>{lifecycleCode}</code></pre>
 			</section>
 
 			<section id="result" class="doc-sec">
-				<h2 class="doc-h2"><span class="sec-no">08</span>工具结果</h2>
-				<p><code>TaskResult</code> 是个 record，工具把结果交回 agent 循环、最终序列化成模型读到的 <code>role:tool</code> 消息。</p>
+				<h2 class="doc-h2"><span class="sec-no">09</span>工具结果</h2>
+				<p><code>TaskResult</code> 是个 record（<code>success</code> / <code>message</code> / <code>timedOut</code> / <code>interrupted</code> / <code>data</code>），工厂方法覆盖常见结局：</p>
 				<pre class="doc-code"><code>{resultCode}</code></pre>
-				<p class="doc-note"><code>data</code> 装任务专属结构化信息（键为小写 snake_case，值须 Gson 可序列化）。<code>toJson()</code> 输出 <code>success</code>/<code>message</code>，仅在为真时才加 <code>timed_out</code>/<code>interrupted</code>/<code>data</code>。</p>
-			</section>
-
-			<section id="gateway" class="doc-sec">
-				<h2 class="doc-h2"><span class="sec-no">09</span>入站消息</h2>
-				<p><code>NumenGateway.enqueue</code> 是"从聊天 GUI 之外喂消息给同伴"的<b>唯一公开入口</b>——Discord 桥、QQ 机器人、直播弹幕、MCP 服务器皆可。</p>
-				<pre class="doc-code"><code>{gatewayCode}</code></pre>
-				<ul class="doc-list">
-					<li><b>原样入队</b>：字符串逐字进同伴的"主人提示队列"，在下一个协议合法点（工具批次边界）被模型看到；多条会合并成一条 user 消息。</li>
-					<li>来源标签、限流、翻译、权限校验<b>全由调用方负责</b>——引擎只定义"给某同伴入队一个字符串"这一个动词。</li>
-					<li><b>出站不走这里</b>：回信通过注册工具（如 <code>send_qq_message</code>）离开同伴。入站 = 消息队列，出站 = 工具调用。工具调用队列本身刻意封死。</li>
-				</ul>
+				<p class="doc-note"><code>data</code> 装任务专属结构化信息（键为小写 snake_case，值须 Gson 可序列化）。<code>toJson()</code> 恒输出 <code>success</code>/<code>message</code>，仅在为真时才加 <code>timed_out</code>/<code>interrupted</code>/非空 <code>data</code>。信封形状仿 Mindcraft，便于小模型直接读懂。</p>
 			</section>
 
 			<section id="player" class="doc-sec">
 				<h2 class="doc-h2"><span class="sec-no">10</span>同伴身体</h2>
-				<p><code>NumenPlayer</code>（<code>entity</code> 包唯一公开类）是服务端假玩家，供工具查询状态、驱动身体、读物品栏。</p>
+				<p><code>NumenPlayer</code>（<code>entity</code> 包唯一公开类）是服务端假玩家，供服务端侧代码查询状态、驱动身体、读物品栏。</p>
 				<pre class="doc-code"><code>{playerCode}</code></pre>
-				<p class="doc-note">常用公开方法：<code>findByUuid</code> · <code>getOwnerUuid</code> · <code>isOwnedByPlayer</code>（跨维度安全）· <code>resolveOwnerPlayer</code> · <code>ensureInInventory</code> · <code>holdInHand</code>（切主手，别用 <code>setItemInHand</code> 覆盖）。</p>
+				<p class="doc-note">常用公开方法：<code>findByUuid(server, uuid)</code> · <code>getOwnerUuid</code>/<code>setOwnerUuid</code> · <code>isOwnedByPlayer</code>（跨维度安全，纯 UUID 比较，勿用原版 <code>isOwnedBy</code>）· <code>resolveOwnerPlayer</code>（离线为 null）· <code>ensureInInventory(item)</code>（是否在物品栏，返回 boolean）· <code>holdInHand(slot)</code>（按原生方式切主手，热键槽直接选中、背包槽与手中互换）。</p>
+			</section>
+
+			<section id="gateway" class="doc-sec">
+				<h2 class="doc-h2"><span class="sec-no">11</span>门一 · 入站消息</h2>
+				<p><code>NumenGateway.enqueue</code> 是“从聊天 GUI 之外喂消息给同伴内置大脑”的<b>唯一公开入口</b>——Discord 桥、QQ 桥、直播弹幕皆可。</p>
+				<pre class="doc-code"><code>{gatewayCode}</code></pre>
+				<ul class="doc-list">
+					<li><b>原样入队</b>：字符串逐字进同伴的“主人提示队列”，在下一个协议合法点（工具批次边界）被模型看到；多条会合并成一条 user 消息。同伴空闲时立即起一轮。</li>
+					<li>来源标签、限流、翻译、权限校验<b>全由调用方负责</b>——引擎只定义“给某同伴入队一个字符串”这一个动词。</li>
+					<li><b>出站不走这里</b>：回信通过注册工具（如第 06 节的 <code>announce</code>）离开同伴。入站 = 消息队列，出站 = 工具调用；工具调用队列本身刻意封死。</li>
+				</ul>
+				<p class="doc-note">参考实现：<a href="https://github.com/Dwinovo/numen-qq-bridge" target="_blank" rel="noopener">numen-qq-bridge</a>——整座桥只用了 <code>NumenGateway.enqueue</code>（入站）+ <code>ToolRegistry.register</code>（出站）两个入口。</p>
+			</section>
+
+			<section id="actuator" class="doc-sec">
+				<h2 class="doc-h2"><span class="sec-no">12</span>门二 · 外部大脑</h2>
+				<p>
+					<code>NumenActuator</code> 让<b>外部智能体</b>（一个 MCP 服务器、一个远程 agent、任何想自己做游戏决策的东西）<b>绕过内置 LLM</b>，直接驱动同伴身体。契约是 <code>acquire → invoke* → release</code>。
+				</p>
+				<pre class="doc-code"><code>{actuatorCode}</code></pre>
+				<ul class="doc-list">
+					<li><b><code>companions()</code></b> → <code>CompletableFuture&lt;List&lt;Companion&gt;&gt;</code>：主人当前在世的同伴，每个是 <code>Companion(UUID uuid, String name)</code>。</li>
+					<li><b><code>acquire(uuid)</code></b>：暂停该同伴内置大脑、停掉在飞的内部回合/任务、腾出身体，两个大脑不会抢一具身体。幂等；非本人同伴返回 <code>false</code>。</li>
+					<li><b><code>invoke(uuid, toolName, argsJson)</code></b> → <code>CompletableFuture&lt;String&gt;</code>：无头调用任意已注册工具，返回 <code>TaskResult</code> 的 JSON 串。不触碰同伴对话记录（上下文由外部大脑自持）。</li>
+					<li><b><code>release(uuid)</code></b>：交还控制权（内置大脑不自动起，等下一条主人消息）。幂等。</li>
+					<li><b>并行免费</b>：每次调用都指向一个 UUID，各身体独立跑任务——一个外部大脑可 <code>acquire</code> 一支舰队并行驱动。</li>
+				</ul>
+				<p class="doc-note">全部方法客户端调用、任意线程安全（内部切客户端主线程，用 <code>CompletableFuture</code> 回传）。官方参考实现：<a href="https://github.com/Dwinovo/numen-mcp" target="_blank" rel="noopener">numen-mcp</a>（一个基于 <code>NumenActuator</code> 的 Model Context Protocol 服务器，让 Claude 之类直接驱动同伴）。</p>
 			</section>
 
 			<section id="skill" class="doc-sec">
-				<h2 class="doc-h2"><span class="sec-no">11</span>写一个 Skill</h2>
+				<h2 class="doc-h2"><span class="sec-no">13</span>Skill（零代码）</h2>
 				<p>Skill 是<b>零代码扩展</b>，与写工具是两条完全不同的路径。放进 <code>config/numen/skills/</code> 的 Markdown 工作流，按需加载以保持 prompt 精简。</p>
 				<pre class="doc-code"><code>{skillMd}</code></pre>
-				<p class="doc-note">frontmatter 只支持单行 <code>key: value</code>（无嵌套/数组），仅需 <code>name</code> + <code>description</code>，其余为正文。项目零第三方依赖，用的是自研 30 行解析器。</p>
-			</section>
-
-			<section id="mcp" class="doc-sec">
-				<h2 class="doc-h2"><span class="sec-no">12</span>接 MCP</h2>
-				<p>MCP 把某模组内部世界结构化接进 AI 感官与手，面向 Create / AE2 / Mekanism 这类"自成宇宙"的科技模组：先用 MCP 连接、再用 Skill 教打法。</p>
-				<p class="doc-warn"><b>规划中：</b>MCP 兼容模块的具体接入 API 尚未在 numen-api 公开源码中定型，进展见仓库。已落地的第一块砖是基于能力的 <code>inspect_block_storage</code>（x-ray 读机器持有的物品/流体/能量）。</p>
-			</section>
-
-			<section id="reference-impl" class="doc-sec">
-				<h2 class="doc-h2"><span class="sec-no">13</span>参考实现</h2>
-				<p>
-					<a href="https://github.com/Dwinovo/numen-qq-mcp" target="_blank" rel="noopener">numen-qq-mcp</a>
-					是官方点名的"numen-api 公开集成接口的参考实现"——整座桥只用了两个公开入口：<code>NumenGateway.enqueue</code>（入站）+ <code>ToolRegistry.register</code>（出站）。想接 Discord / Telegram / 直播弹幕，照抄其结构即可。
-				</p>
-				<pre class="doc-code"><code>你的QQ ──NapCat (OneBot WS)──▶ numen-qq ──enqueue──▶ 同伴消息队列 ──▶ 同伴干活
-你的QQ ◀──send_private_msg── numen-qq ◀──send_qq_message 工具── 同伴干完汇报</code></pre>
-				<p class="doc-note">逻辑全在 <code>common/</code>（配置、WS 客户端、装配、工具、常量五个类），<code>fabric/</code>/<code>neoforge/</code> 各一个入口类。安全模型：双白名单"空 = 一条不收"，默认全拒、显式放行。许可 MIT。</p>
+				<p class="doc-note">frontmatter 只支持单行 <code>key: value</code>（无嵌套/数组），仅需 <code>name</code> + <code>description</code>，其余为正文。解析器住在 <code>agent.skill</code>（整包 <code>@Internal</code>）——你只写 Markdown，不调它的 Java。</p>
 			</section>
 
 			<section id="cheatsheet" class="doc-sec">
@@ -331,23 +451,25 @@ description: 从零到击杀末影龙的完整流程。
 						<thead><tr><th>符号</th><th>包</th><th>关键点</th></tr></thead>
 						<tbody>
 							<tr><td><code>NumenTool</code></td><td><code>agent.tool</code></td><td><code>name</code> / <code>description</code> / <code>parameterSchema</code> / <code>invoke(ToolCall)</code></td></tr>
-							<tr><td><code>ToolCall</code></td><td><code>agent.tool</code></td><td><code>id</code> <code>args</code> <code>rawArgs</code> <code>ctx</code> <code>complete(String)</code></td></tr>
-							<tr><td><code>ToolRegistry</code></td><td><code>agent.tool</code></td><td><code>register</code>（重名抛异常）/ <code>resolve</code> / <code>all</code></td></tr>
+							<tr><td><code>ToolCall</code></td><td><code>agent.tool</code></td><td><code>id</code> <code>toolName</code> <code>rawArgs</code> <code>args</code>(JsonObject) <code>ctx</code> <code>complete(String)</code></td></tr>
+							<tr><td><code>ToolRegistry</code></td><td><code>agent.tool</code></td><td><code>register</code>(重名抛异常) / <code>resolve</code> / <code>all</code> / <code>size</code></td></tr>
+							<tr><td><code>ToolArgs</code></td><td><code>agent.tool</code></td><td><code>requireInt</code> / <code>requireItem</code> / <code>optionalPos</code> …（非法抛 <code>IllegalArgumentException</code>）</td></tr>
 							<tr><td><code>TaskResult</code></td><td><code>task</code></td><td>record；<code>ok/fail/timeout/cancelled</code> + <code>toJson()</code></td></tr>
-							<tr><td><code>NumenGateway</code></td><td><code>api</code></td><td><code>enqueue(UUID, String)</code></td></tr>
-							<tr><td><code>NumenPlayer</code></td><td><code>entity</code></td><td><code>findByUuid</code> / <code>isOwnedByPlayer</code> / <code>ensureInInventory</code></td></tr>
+							<tr><td><code>NumenGateway</code></td><td><code>api</code></td><td><code>enqueue(UUID, String)</code> → boolean</td></tr>
+							<tr><td><code>NumenActuator</code></td><td><code>api</code></td><td><code>companions</code> / <code>acquire</code> / <code>invoke</code> / <code>release</code>（均 <code>CompletableFuture</code>）</td></tr>
+							<tr><td><code>NumenPlayer</code></td><td><code>entity</code></td><td><code>findByUuid</code> / <code>isOwnedByPlayer</code> / <code>ensureInInventory</code> / <code>holdInHand</code></td></tr>
 						</tbody>
 					</table>
 				</div>
-				<p class="doc-note">完整工具清单未在任何 README 列出，见 <a href={SRC} target="_blank" rel="noopener">源码 common/…/numen/</a>。<code>:api</code> 制品自带 <code>-javadoc.jar</code>（maven 仓库里有）。</p>
+				<p class="doc-note">完整方法契约见 <a href={SRC} target="_blank" rel="noopener">源码 common/…/numen/</a>；numen-maven 每个版本另发 <code>-javadoc.jar</code> 与 <code>-sources.jar</code>，IDE 里能读到全部方法签名与文档。</p>
 			</section>
 
 			<section id="license" class="doc-sec">
 				<h2 class="doc-h2"><span class="sec-no">15</span>许可</h2>
 				<ul class="doc-list">
-					<li><b>源码</b> LGPL-3.0（分发的 fork 须同样开源）</li>
-					<li><b>公开集成 API</b>（工具包/MCP 桥编译针对的那层）MIT——任何人可自由做模组兼容</li>
-					<li><b>美术与素材</b> All Rights Reserved；"Numen" / "言出法随" 名称保留</li>
+					<li><b>源代码</b> <code>LGPL-3.0-only</code>——你分发的修改版须同样开源。</li>
+					<li><b>公共对接 API 面</b>（<code>com.dwinovo.numen.api</code> 等你 <code>compileOnly</code> 的那层）<code>MIT</code>——写兼容/闭源商业项目均可自由使用。</li>
+					<li><b>美术与素材</b> All Rights Reserved；“Numen” / “言出法随” 名称保留。</li>
 				</ul>
 			</section>
 		</main>
@@ -558,7 +680,8 @@ description: 从零到击杀末影龙的完整流程。
 		border: 1.5px solid var(--ink);
 		border-radius: 5px;
 		padding: 0.04em 0.36em;
-		white-space: nowrap;
+		white-space: normal;
+		overflow-wrap: anywhere;
 	}
 
 	/* code 块：实体块 + 硬阴影 */

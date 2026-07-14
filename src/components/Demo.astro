@@ -1,7 +1,7 @@
 ---
 // Demo — 言出法随 · 实录
 // 全站签名区块：一段真实对话，随滚动逐拍上演。
-// 编排分四幕：你说（逐字成句）→ 它应 → 它做（终端读出条 + 矿下实录相框显影）→ 它成（焦点回收到结果）。
+// 编排分四幕：你说（逐字成句）→ 他应 → 他做（终端读出条 + 矿下实录相框显影）→ 他成（焦点回收到结果）。
 import { Image } from 'astro:assets';
 import footage from '../assets/cave-mineshaft.png';
 ---
@@ -24,26 +24,26 @@ import footage from '../assets/cave-mineshaft.png';
 				</p>
 			</div>
 
-			<!-- 第二幕：它应答 -->
+			<!-- 第二幕：他应答 -->
 			<div class="msg from-numen" data-msg="ack">
 				<span class="who">Numen</span>
 				<p class="text">这就去。先下矿找铁。</p>
 			</div>
 
-			<!-- 第三幕：它执行（ink 底终端条） -->
+			<!-- 第三幕：他执行（ink 底终端条） -->
 			<div class="msg toolchain" data-msg="tool">
 				<code class="tc" aria-label="4 步 · locate_biome · move_to · auto_mine · collect_items ✓"><span class="tc-part tc-count" aria-hidden="true">4 步</span><span class="tc-part tc-step" aria-hidden="true"> · locate_biome</span><span class="tc-part tc-step" aria-hidden="true"> · move_to</span><span class="tc-part tc-step" aria-hidden="true"> · auto_mine</span><span class="tc-part tc-step" aria-hidden="true"> · collect_items</span><span class="tc-part tc-done" aria-hidden="true"> ✓</span></code>
 				<span class="tc-progress" aria-hidden="true"></span>
 			</div>
 
-			<!-- 第四幕：它办成了 -->
+			<!-- 第四幕：他办成了 -->
 			<div class="msg from-numen msg-final" data-msg="done">
 				<span class="who">Numen</span>
 				<p class="text">拿到 64 个粗铁——要顺手帮你熔了吗？</p>
 			</div>
 		</div>
 
-		<p class="demo-note">不是脚本。每一步都是它自己感知、规划、执行的结果。</p>
+		<p class="demo-note">不是脚本。每一步都是他自己感知、规划、执行的结果。</p>
 	</div>
 </section>
 
@@ -327,12 +327,12 @@ import footage from '../assets/cave-mineshaft.png';
 				.from(chars, { autoAlpha: 0, duration: 0.12, ease: 'none', stagger: 0.14 }, 0.72)
 				.to(caret, { autoAlpha: 0, duration: 0.25, ease: 'none' }, 2.1);
 
-			// —— 第二幕：它应答（停一拍再来，像真的在想）——
+			// —— 第二幕：他应答（停一拍再来，像真的在想）——
 			tl.from(msgAck, { autoAlpha: 0, y: 44, duration: 0.7 }, 2.7);
 
-			// —— 第三幕：它执行。终端条落位，四步逐一点亮、随即退灰，
+			// —— 第三幕：他执行。终端条落位，四步逐一点亮、随即退灰，
 			//    底部苔绿进度条匀速推进，末端 ✓ 弹出定音；
-			//    同时矿下实录在相框里显影——它真的下矿了 ——
+			//    同时矿下实录在相框里显影——他真的下矿了 ——
 			tl.from(tool, { autoAlpha: 0, y: 30, duration: 0.5 }, 3.8)
 				/* 信号接通：矿下实录自中缝横向扫开（clip-path 左右向）——
 				   像带宽被拉开、信号铺满相框，而不是灯被调亮；
@@ -372,7 +372,7 @@ import footage from '../assets/cave-mineshaft.png';
 				5.5
 			);
 
-			// —— 第四幕：它办成了。结果落地，前情整体退后半步，焦点收到这一句 ——
+			// —— 第四幕：他办成了。结果落地，前情整体退后半步，焦点收到这一句 ——
 			const doneAt = stepsEnd + 1.3;
 			tl.from(msgDone, { autoAlpha: 0, y: 56, duration: 0.85, ease: 'power3.out' }, doneAt)
 				.to([msgYou, msgAck, tool], { opacity: 0.38, duration: 0.85 }, doneAt)

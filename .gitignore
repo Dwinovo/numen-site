@@ -16,6 +16,10 @@ pnpm-debug.log*
 # environment variables
 .env
 .env.production
+.dev.vars
+.wrangler/
+# wrangler 生成的绑定类型
+worker-configuration.d.ts
 
 # macOS-specific files
 .DS_Store
@@ -27,3 +31,6 @@ pnpm-debug.log*
 raw-assets/**
 !raw-assets/minecraft/
 !raw-assets/minecraft/SOURCES.md
+
+# COS 备份凭据
+.env.cos

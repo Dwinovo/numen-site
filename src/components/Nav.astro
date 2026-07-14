@@ -17,10 +17,12 @@ const { current = 'home' } = Astro.props as {
 	</a>
 	<nav class="nav-links" aria-label="站点导航">
 		<a href="/" class:list={['nav-link', current === 'home' && 'is-current']}>首页</a>
-		<a href="/addons" class:list={['nav-link', current === 'addons' && 'is-current']}>能力</a>
+		<a href="/addons" class:list={['nav-link', current === 'addons' && 'is-current']}>附属</a>
 		<a href="/docs" class:list={['nav-link', current === 'docs' && 'is-current']}>文档</a>
 		<a href="/about" class:list={['nav-link', current === 'about' && 'is-current']}>关于</a>
-		<a href="https://github.com/Dwinovo/minecraft-numen" target="_blank" rel="noopener" class="nav-btn">GitHub ↗</a>
+		<a class="nav-link nav-ext" href="https://github.com/Dwinovo/minecraft-numen" target="_blank" rel="noopener">
+			GitHub <span class="ext-arrow" aria-hidden="true">↗</span>
+		</a>
 	</nav>
 </header>
 
@@ -131,28 +133,25 @@ const { current = 'home' } = Astro.props as {
 		border-bottom-color: var(--ink);
 	}
 
-	/* GitHub —— 小实体按钮：硬阴影 + 按压反馈 */
-	.nav-btn {
-		color: var(--cream);
-		background-color: var(--ink);
-		text-decoration: none;
+	/* GitHub —— 与站内链接同款文本样式，↗ 表示跳外站 */
+	.ext-arrow {
 		font-weight: 700;
+		color: color-mix(in srgb, var(--ink) 42%, transparent);
+	}
+
+	.nav-ext:hover .ext-arrow,
+	.nav-ext:focus-visible .ext-arrow {
+		color: var(--ink);
+	}
+
+	/* 登录态 island 加载前的占位骨架 */
+	.auth-skeleton {
+		display: inline-block;
+		width: 68px;
+		height: 36px;
 		border: 3px solid var(--ink);
 		border-radius: 10px;
-		box-shadow: 5px 5px 0 var(--ink);
-		padding: 0.32em 0.7em;
-		transition: transform 0.15s ease, box-shadow 0.15s ease;
-	}
-
-	.nav-btn:hover,
-	.nav-btn:focus-visible {
-		transform: translate(-2px, -2px);
-		box-shadow: 7px 7px 0 var(--ink);
-	}
-
-	.nav-btn:active {
-		transform: translate(2px, 2px);
-		box-shadow: 2px 2px 0 var(--ink);
+		opacity: 0.2;
 	}
 
 	@media (max-width: 640px) {

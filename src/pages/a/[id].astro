@@ -1,0 +1,137 @@
+---
+// 附属详情页 —— 纯静态。构建期为每条附属生成一页，供直链 / 无 JS / SEO。
+// 数据来自内容集合 src/content/addons/*.json；无数据库、无点赞、无评论。
+import Subpage from '../../layouts/Subpage.astro';
+import { getCollection } from 'astro:content';
+import PlatformLink from '../../components/PlatformLink.astro';
+
+export async function getStaticPaths() {
+	const entries = await getCollection('addons');
+	return entries.map((e) => ({ params: { id: e.id }, props: { data: e.data } }));
+}
+
+const { data } = Astro.props;
+---
+
+<Subpage title={`${data.name} — Numen`} description={data.description.slice(0, 80)} current="addons">
+	<article class="detail">
+		<a class="back" href="/addons">← 附属目录</a>
+
+		<header class="head">
+			<div class="badges">
+				{data.type && <span class="type-chip">{data.type}</span>}
+			</div>
+			<h1 class="name">{data.name}</h1>
+		</header>
+
+		<p class="desc">{data.description}</p>
+
+		<span class="author">
+			<span class="author-ava author-ava--fb">{data.author.slice(0, 1).toUpperCase()}</span>
+			<span class="author-name">{data.author}</span>
+		</span>
+
+		{
+			data.links.length > 0 && (
+				<div class="links">
+					{data.links.map((l) => (
+						<PlatformLink href={l.href} label={l.label} />
+					))}
+				</div>
+			)
+		}
+	</article>
+</Subpage>
+
+<style>
+	.detail {
+		width: min(760px, 90vw);
+		margin-inline: auto;
+		padding: clamp(5rem, 10vh, 7rem) 0 clamp(3rem, 6vh, 4.5rem);
+	}
+
+	.back {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		font-weight: 700;
+		color: var(--muted);
+		text-decoration: none;
+	}
+	.back:hover {
+		color: var(--ink);
+	}
+
+	.head {
+		margin-top: 1rem;
+	}
+
+	.badges {
+		display: flex;
+		gap: 0.5rem;
+		margin-bottom: 0.6rem;
+	}
+
+	.type-chip {
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		font-weight: 700;
+		color: var(--ink);
+		background: var(--grass);
+		border: 2px solid var(--ink);
+		border-radius: 6px;
+		padding: 0.2em 0.55em;
+		transform: rotate(-1.5deg);
+		display: inline-block;
+	}
+
+	.name {
+		margin: 0;
+		font-weight: 900;
+		font-size: clamp(1.7rem, 4vw, 2.6rem);
+		letter-spacing: -0.02em;
+		line-height: 1.12;
+	}
+
+	.desc {
+		margin: clamp(0.8rem, 1.6vh, 1.1rem) 0 0;
+		font-size: 1.02rem;
+		line-height: 1.9;
+		color: color-mix(in srgb, var(--ink) 82%, transparent);
+		white-space: pre-wrap;
+		word-break: break-word;
+	}
+
+	.author {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.7rem;
+		margin-top: clamp(1.4rem, 3vh, 2rem);
+		color: var(--ink);
+		width: fit-content;
+	}
+	.author-ava {
+		width: 46px;
+		height: 46px;
+		object-fit: cover;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		border: 2.5px solid var(--ink);
+		border-radius: 11px;
+		box-shadow: 3px 3px 0 var(--ink);
+		background: var(--grass);
+		font-weight: 900;
+		font-size: 1.2rem;
+	}
+	.author-name {
+		font-weight: 800;
+		font-size: 1.08rem;
+	}
+
+	.links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.6rem;
+		margin-top: clamp(1.4rem, 3vh, 2rem);
+	}
+</style>
