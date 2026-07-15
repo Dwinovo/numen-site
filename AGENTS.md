@@ -52,7 +52,7 @@ Numen 是一个围绕 Minecraft 与 AI 的开源生态，包含以下仓库：
 
 ## 部署与访问
 
-- 已上线 **https://dwinovo.cn**(域名已 ICP 备案)。
+- 已上线 **https://numen.dwinovo.cn**(根域 dwinovo.cn 已备案,子域名同备案覆盖)。
 - **目标形态:EdgeOne Pages** —— 连 GitHub 仓库,`npm run build` 出 `dist/` 纯静态,merge 到 main 自动构建部署,由 EdgeOne CDN(境内可用区)分发。纯静态后无源站可打,DDoS 面几乎归零。
 - 迁移完成后,旧的「腾讯轻量 + Nginx + Node + 回源鉴权 + 自签证书 + 防火墙白名单」整套源站可退役。
 - 大陆访问策略：所有资源自托管（字体/图标/JS），不引用大陆不稳定的第三方 CDN。
